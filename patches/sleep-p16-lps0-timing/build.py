@@ -6,12 +6,15 @@ import hashlib
 import json
 import os
 from pathlib import Path
+import platform
+import re
 import shutil
 import subprocess
 import sys
 
 ROOT = Path(__file__).resolve().parent
 LOCK = json.loads((ROOT / 'source.lock.json').read_text())
+REPRO = json.loads((ROOT / 'reproduction.lock.json').read_text())
 CACHE = ROOT / '.cache' / 'baseline'
 TOOLS = ROOT / '.cache' / 'tools'
 WORK = ROOT / 'build'
@@ -31,6 +34,69 @@ def check(path, expected):
         raise RuntimeError(f'Missing or changed input: {path}')
 
 
+def canonical_sha(value):
+    return hashlib.sha256(json.dumps(value, sort_keys=True,
+                                    separators=(',', ':')).encode()).hexdigest()
+
+
+def reproduction_inputs():
+    check(ROOT / 'source.lock.json', REPRO['source_lock_sha256'])
+    for name, digest in REPRO['provenance_sha256'].items():
+        check(ROOT / 'provenance' / name, digest)
+
+
+def doctor():
+    reproduction_inputs()
+    if platform.machine() != 'aarch64':
+        raise RuntimeError('This is a native aarch64 build; cross-compiling is not configured')
+    for name, expected in REPRO['host_toolchain_packages'].items():
+        actual = subprocess.check_output(['pacman', '-Q', name], text=True).strip()
+        if actual != name + ' ' + expected:
+            raise RuntimeError(f'Expected {name} {expected}; found {actual}. See REPRODUCING.md.')
+    for command in ('gcc', 'g++', 'ld', 'make', 'patch', 'bsdtar', 'curl', 'bison',
+                    'flex', 'pahole', 'openssl', 'objcopy', 'modinfo', 'depmod',
+                    'makepkg', 'fakeroot', 'mkinitcpio', 'lsinitcpio', 'zstd'):
+        if shutil.which(command) is None:
+            raise RuntimeError(f'Missing build prerequisite: {command}; see REPRODUCING.md')
+    print('Native architecture, pinned host toolchain, and build prerequisites: OK', flush=True)
+
+
+def verify_nvidia_sources(tree, exact=False):
+    expected = json.loads((ROOT / 'provenance/nvidia-source-checksums.json').read_text())
+    for name, digest in expected.items():
+        path = tree / name
+        if path.is_symlink():
+            raise RuntimeError(f'Unexpected NVIDIA source symlink: {name}')
+        check(path, digest)
+    if exact:
+        actual = {str(p.relative_to(tree)) for p in tree.rglob('*') if p.is_file() or p.is_symlink()}
+        if actual != set(expected):
+            raise RuntimeError('Reconstructed NVIDIA source file set differs from the original build')
+    return expected
+
+
+def prepare_nvidia(recipe, log):
+    NVIDIA.mkdir()
+    archive = CACHE / f'NVIDIA-kernel-module-source-{LOCK["nvidia_version"]}.tar.xz'
+    run(['bsdtar', '-xf', archive, '-C', NVIDIA, '--strip-components', '1'],
+        stdout=log, stderr=subprocess.STDOUT)
+    # Reproduce Omarchy's pinned nvidia-open-dkms prepare/package operations.
+    # HOSTNAME/WHOAMI patterns are no-ops in this release, as in its recipe.
+    utils = NVIDIA / 'utils.mk'
+    text = utils.read_text()
+    for pattern, replacement in ((r'^  HOSTNAME.*', '  HOSTNAME = echo archlinux'),
+                                 (r'^WHOAMI.*', 'WHOAMI = echo archlinux-builder'),
+                                 (r'^DATE.*', 'DATE = date -r version.mk')):
+        text = re.sub(pattern, replacement, text, flags=re.M)
+    utils.write_text(text)
+    for name in REPRO['nvidia_patches']:
+        apply(recipe / name, NVIDIA, log)
+    (NVIDIA / 'kernel-open/dkms.conf').unlink()
+    shutil.copy2(ROOT / 'provenance/nvidia-dkms.conf', NVIDIA / 'dkms.conf')
+    manifest = verify_nvidia_sources(NVIDIA, exact=True)
+    (WORK / 'nvidia-source-checksums.json').write_text(json.dumps(manifest, indent=2)+'\n')
+
+
 def run(args, cwd=ROOT, **kwargs):
     return subprocess.run([str(a) for a in args], cwd=cwd, check=True, **kwargs)
 
@@ -48,7 +114,8 @@ def fetch(path, url, expected):
 def environment():
     env = os.environ.copy()
     for name in ('CFLAGS', 'CXXFLAGS', 'LDFLAGS', 'MAKEFLAGS', 'KERNELRELEASE',
-                 'ARCH', 'CROSS_COMPILE', 'KBUILD_OUTPUT', 'LLVM', 'LOCALVERSION'):
+                 'ARCH', 'CROSS_COMPILE', 'KBUILD_OUTPUT', 'LLVM', 'LOCALVERSION',
+                 'CC', 'CXX', 'HOSTCC', 'HOSTCXX', 'LD', 'RUSTC', 'RUSTFLAGS'):
         env.pop(name, None)
     prefix = TOOLS / 'root' / 'usr'
     env.update(PATH=str(prefix / 'bin') + ':' + env['PATH'],
@@ -78,6 +145,7 @@ def tools():
 
 
 def inputs():
+    reproduction_inputs()
     check(ROOT / 'fix.patch', LOCK['candidate_patch_sha256'])
     check(WIFI, LOCK['existing_wifi_patch_sha256'])
     for item in LOCK['archives']:
@@ -111,6 +179,7 @@ def apply(patch, directory, log):
 
 
 def prepare():
+    doctor()
     recipe = inputs()
     if KERNEL.exists() or NVIDIA.exists():
         raise RuntimeError('build source already exists; reuse it with build, '
@@ -130,13 +199,7 @@ def prepare():
         apply(WIFI, KERNEL / 'drivers/net/wireless/mediatek/mt76', log)
         apply(ROOT / 'fix.patch', KERNEL, log)
         check(KERNEL / DRIVER, LOCK['candidate_driver_sha256'])
-        # Copy the already installed, patched driver source; do not run DKMS
-        # against the live system. Record every copied file for later auditing.
-        installed = Path('/usr/src') / ('nvidia-' + LOCK['nvidia_version'])
-        shutil.copytree(installed, NVIDIA, symlinks=True)
-        manifest = {str(p.relative_to(NVIDIA)): sha(p) for p in sorted(NVIDIA.rglob('*'))
-                    if p.is_file() and not p.is_symlink()}
-        (WORK / 'nvidia-source-checksums.json').write_text(json.dumps(manifest, indent=2)+'\n')
+        prepare_nvidia(recipe, log)
         run(['make', 'olddefconfig'], cwd=KERNEL, env=environment(),
             stdout=log, stderr=subprocess.STDOUT)
     check(KERNEL / '.config', LOCK['installed_config_sha256'])
@@ -146,15 +209,20 @@ def prepare():
         raise RuntimeError(f'Unexpected kernel release: {release}')
     (WORK / 'prepared.json').write_text(json.dumps({
         'kernel': release, 'source_lock_sha256': sha(ROOT / 'source.lock.json'),
+        'reproduction_lock_sha256': sha(ROOT / 'reproduction.lock.json'),
         'config_sha256': sha(KERNEL / '.config')}, indent=2)+'\n')
     print('Prepared', release, 'with byte-identical kernel config', flush=True)
 
 
 def build(jobs):
+    doctor()
     prepared = json.loads((WORK / 'prepared.json').read_text())
     check(ROOT / 'source.lock.json', prepared['source_lock_sha256'])
     check(KERNEL / '.config', LOCK['installed_config_sha256'])
     check(KERNEL / DRIVER, LOCK['candidate_driver_sha256'])
+    if 'reproduction_lock_sha256' in prepared:
+        check(ROOT / 'reproduction.lock.json', prepared['reproduction_lock_sha256'])
+    verify_nvidia_sources(NVIDIA)
     run([sys.executable, ROOT / 'tests/test_lps0_timing.py', KERNEL])
     for name, cwd, command in (
         ('kernel', KERNEL, ['make', f'-j{jobs}', 'Image', 'modules']),
@@ -186,6 +254,7 @@ def build(jobs):
 
 
 def audit():
+    reproduction_inputs()
     info = json.loads((WORK / 'build-info.json').read_text())
     check(ROOT / 'source.lock.json', info['source_lock_sha256'])
     check(KERNEL / '.config', LOCK['installed_config_sha256'])
@@ -193,26 +262,18 @@ def audit():
         check(ROOT / name, digest)
     directory = WORK / 'audit'
     directory.mkdir(exist_ok=True)
-    current = Path('/usr/lib/modules') / LOCK['installed_kernel']
-    installed_modules = set()
-    for path in (current / 'kernel').rglob('*.ko*'):
-        name = str(path.relative_to(current / 'kernel'))
-        for suffix in ('.zst', '.xz', '.gz'):
-            name = name.removesuffix(suffix)
-        installed_modules.add(name)
+    verify_nvidia_sources(NVIDIA)
+    baseline = json.loads((ROOT / 'provenance/baseline-audit.json').read_text())
     built_modules = {str(Path(name).with_suffix('.ko'))
                      for name in (KERNEL / 'modules.order').read_text().splitlines()}
-    if installed_modules != built_modules:
-        raise RuntimeError('The test kernel module set differs from the installed baseline')
+    if (len(built_modules) != baseline['module_count'] or
+            canonical_sha(sorted(built_modules)) != baseline['module_paths_sha256']):
+        raise RuntimeError('The test kernel module set differs from the archived baseline')
     if any(not (KERNEL / name).is_file() for name in built_modules):
         raise RuntimeError('An expected kernel module is missing from the build')
     wifi = KERNEL / 'drivers/net/wireless/mediatek/mt76/mt7925/mt7925e.ko'
-    for label, module in [('current-wifi', current / 'updates/mt7925e.ko'),
-                          ('test-wifi', wifi)]:
-        run(['objcopy', '--dump-section', f'.text={directory / (label + ".text")}',
-             module, '/dev/null'])
-    if (directory / 'current-wifi.text').read_bytes() != (directory / 'test-wifi.text').read_bytes():
-        raise RuntimeError('Test Wi-Fi machine code differs from the current patched driver')
+    run(['objcopy', '--dump-section', f'.text={directory / "test-wifi.text"}', wifi, '/dev/null'])
+    check(directory / 'test-wifi.text', baseline['patched_wifi_text_sha256'])
     wifi_release = subprocess.check_output(['modinfo', '-F', 'vermagic', wifi], text=True).split()[0]
     if wifi_release != LOCK['test_kernel']:
         raise RuntimeError('Wrong test Wi-Fi vermagic')
@@ -220,20 +281,22 @@ def audit():
     # the actual complete symbol-version tables produced by both builds.
     def versions(path):
         return {line.split()[1]: line.split()[0] for line in path.read_text().splitlines()}
-    if versions(current / 'build/Module.symvers') != versions(KERNEL / 'Module.symvers'):
-        raise RuntimeError('Exported kernel symbol versions differ from the installed baseline')
+    symbol_versions = versions(KERNEL / 'Module.symvers')
+    if (len(symbol_versions) != baseline['exported_symbol_count'] or
+            canonical_sha(symbol_versions) != baseline['exported_symbol_crcs_sha256']):
+        raise RuntimeError('Exported kernel symbol versions differ from the archived baseline')
     nvidia_version = subprocess.check_output(
         ['modinfo', '-F', 'version', NVIDIA / 'kernel-open/nvidia.ko'], text=True).strip()
     if nvidia_version != LOCK['nvidia_version']:
         raise RuntimeError('Unexpected NVIDIA driver version')
-    result = dict(wifi_text_matches_current_patch=True,
+    result = dict(wifi_text_matches_archived_patch=True,
                   matching_kernel_module_count=len(built_modules),
                   wifi_vermagic=wifi_release, wifi_module_sha256=sha(wifi),
                   nvidia_version=nvidia_version,
-                  exported_symbol_crcs_match_installed=True,
-                  config_matches_installed=True, runtime_tested=False)
+                  exported_symbol_crcs_match_archived=True,
+                  config_matches_archived=True, runtime_tested=False)
     (directory / 'validation.json').write_text(json.dumps(result, indent=2)+'\n')
-    print('Wi-Fi machine code and full kernel symbol versions match the installed baseline.', flush=True)
+    print('Wi-Fi machine code and full kernel symbol versions match the archived baseline.', flush=True)
     return info
 
 
@@ -352,12 +415,16 @@ def image():
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('command', choices=['tools', 'prepare', 'build', 'audit', 'package', 'image'])
+    parser.add_argument('command', choices=['doctor', 'inputs', 'tools', 'prepare', 'build', 'audit', 'package', 'image'])
     parser.add_argument('--jobs', type=int, default=6)
     args = parser.parse_args()
     if args.jobs < 1:
         parser.error('--jobs must be positive')
-    if args.command == 'tools':
+    if args.command == 'doctor':
+        doctor()
+    elif args.command == 'inputs':
+        print(inputs())
+    elif args.command == 'tools':
         tools()
     elif args.command == 'prepare':
         prepare()

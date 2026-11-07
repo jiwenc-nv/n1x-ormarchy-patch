@@ -14,6 +14,39 @@ ROOT = Path(__file__).resolve().parent
 PACKAGE = 'linux-omarchy-p16-sleep'
 EFI = Path('/boot/EFI/Linux')
 PARAM = 'power_wrap_drv.p16_lps0_late='
+DEFAULT_PATHS = {'test': 'Omarchy/' + PACKAGE, 'stock': 'Omarchy/linux-omarchy'}
+
+
+def selection_settings(config):
+    header = re.split(r'(?m)^[ \t]*/', config, maxsplit=1)[0]
+    settings = {}
+    for key, value in re.findall(r'(?im)^[ \t]*(default_entry|remember_last_entry|timeout)[ \t]*:[ \t]*(.*)$', header):
+        key = key.lower()
+        if key in settings:
+            raise RuntimeError(f'Duplicate global boot setting: {key}')
+        settings[key] = value.strip()
+    return settings
+
+
+def check_selection(config, original, policy):
+    expected = selection_settings(original)
+    if policy != 'original':
+        target = DEFAULT_PATHS[policy]
+        expected['default_entry'] = target
+        if 'remember_last_entry' in expected:
+            expected['remember_last_entry'] = 'no'
+        # Resolve the menu hierarchy: a same-named snapshot is not the target.
+        stack, paths = [], []
+        for slashes, title in re.findall(r'(?m)^[ \t]*(/+)\+?([^\n]+?)\s*$', config):
+            depth = len(slashes)
+            if depth > len(stack) + 1:
+                raise RuntimeError('Unexpected boot-menu nesting')
+            stack = stack[:depth-1] + [title]
+            paths.append('/'.join(stack))
+        if paths.count(target) != 1:
+            raise RuntimeError(f'Expected one boot-menu path: {target}')
+    if selection_settings(config) != expected:
+        raise RuntimeError(f'Boot selection differs from requested default policy: {policy}')
 
 
 def sections(data):
@@ -42,6 +75,8 @@ def sha(path):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--mode', choices=('off', 'on'), required=True)
+    parser.add_argument('--default', choices=('original', 'test', 'stock'), default='original',
+                        help='Expected boot default; unrelated global settings must stay unchanged')
     args = parser.parse_args()
     if os.geteuid() != 0:
         raise SystemExit('Run with sudo; this reads the protected boot partition.')
@@ -79,9 +114,7 @@ def main():
         raise RuntimeError(f'Wrong experiment mode in the UKI: {switches}')
     config = Path('/boot/limine.conf').read_text()
     original = (ROOT / 'validation/limine.before.conf').read_text()
-    settings = lambda text: re.findall(r'(?im)^\s*(default_entry|remember_last_entry|timeout)\s*:\s*(.*)$', text.split('\n/', 1)[0])
-    if settings(config) != settings(original):
-        raise RuntimeError('Global boot selection settings changed; review before rebooting')
+    check_selection(config, original, args.default)
     titles = re.findall(r'(?m)^\s*/+\+?([^\n]+?)\s*$', config)
     for title in ('linux-omarchy', 'linux-omarchy-fallback', PACKAGE):
         if title not in titles:
@@ -102,10 +135,10 @@ def main():
         raise RuntimeError('Test entry precedes the stock entry; review ordering before rebooting')
     print('Original kernel and rescue UKIs: unchanged')
     print(f'Test UKI: exact built kernel; patch {args.mode}; existing boot arguments preserved')
-    print('Original boot-selection settings preserved; stock entry precedes test entry')
-    if any(key.lower() == 'remember_last_entry' and value.strip().lower() == 'yes' for key, value in settings(config)):
+    print(f'Boot default verified: {args.default}; stock entry precedes test entry')
+    if selection_settings(config).get('remember_last_entry', '').lower() == 'yes':
         print('The menu remembers your selection. Select the stock kernel when finished testing.')
-    print('CHECKS PASSED. You may reboot and manually select linux-omarchy-p16-sleep.')
+    print('CHECKS PASSED. See TESTING.md for boot selection and recovery commands.')
 
 
 if __name__ == '__main__':

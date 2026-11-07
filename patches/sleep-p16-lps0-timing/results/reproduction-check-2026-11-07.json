@@ -1,0 +1,19 @@
+{
+  "date": "2026-11-07",
+  "method": "Source-only export to a separate directory with initially empty cache/build/release/validation directories; tools and source archives downloaded anew from pinned URLs.",
+  "build_script_sha256": "4e94ea59c557392221f75d85751a06005341b8f0860c69f4f8e78cf6be4773c5",
+  "source_lock_sha256": "3e4ddef160c1fbb333c0e82edac1eca5052cf9092c4d5af472c6c366ec6dc52c",
+  "reproduction_lock_sha256": "f6fac33cb999f63f96039795b689fdf665c7e6c81b4afdc6f9cf5af639b7d48d",
+  "checks": {
+    "native_toolchain_preflight": "passed",
+    "tool_package_signatures": "passed",
+    "archive_sha256": "passed",
+    "vendor_kernel_patches_applied_without_fuzz": 448,
+    "kernel_config_identical": true,
+    "nvidia_source_files_identical_to_original_build": 4004,
+    "callback_tests_plain": "passed",
+    "callback_tests_asan_ubsan": "passed",
+    "existing_full_build_vs_archived_baseline_audit": "passed"
+  },
+  "scope": "Fresh source preparation and callback tests, plus a re-audit of the previously compiled and boot-tested full kernel; a second full kernel compilation was not run."
+}

@@ -1,0 +1,11 @@
+#!/usr/bin/ash
+
+# The panel stays at its dim power-on backlight until the NVIDIA backlight is
+# first written, which systemd-backlight only does once the root filesystem is
+# unlocked. Write it here so Plymouth's LUKS prompt is readable;
+# systemd-backlight restores the saved level after unlock.
+run_hook() {
+    if [ -w /sys/class/backlight/nvidia_0/brightness ]; then
+        echo 60 > /sys/class/backlight/nvidia_0/brightness
+    fi
+}

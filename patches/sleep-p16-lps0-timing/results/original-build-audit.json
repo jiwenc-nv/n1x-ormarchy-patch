@@ -1,0 +1,10 @@
+{
+  "wifi_text_matches_current_patch": true,
+  "matching_kernel_module_count": 8506,
+  "wifi_vermagic": "7.3.0-26-omarchy-p16-sleep1",
+  "wifi_module_sha256": "4ca96df9d1fee7adcd91713928c90d76c31ba99d8cf43046c4f8c90073d4be91",
+  "nvidia_version": "615.78.08",
+  "exported_symbol_crcs_match_installed": true,
+  "config_matches_installed": true,
+  "runtime_tested": false
+}

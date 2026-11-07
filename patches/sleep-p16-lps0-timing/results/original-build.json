@@ -1,0 +1,28 @@
+{
+  "kernel": "7.3.0-26-omarchy-p16-sleep1",
+  "source_lock_sha256": "3e4ddef160c1fbb333c0e82edac1eca5052cf9092c4d5af472c6c366ec6dc52c",
+  "config_sha256": "0e9a79eab46abe9aa655302599e5dab9688b1f89e51dab0a3c600b14d2aae0a4",
+  "artifacts": {
+    "build/linux-7.3/arch/arm64/boot/Image": "6a65ce2921604b4fc69b5a2c129548497e26ed284d813141314da74e5b36b19e",
+    "build/linux-7.3/vmlinux": "d1ce4bb9a19e3e371a497271dbd2dbdf06c764f627445f4c46746a91f8b8258e",
+    "build/linux-7.3/System.map": "575f2c5b08574f57bb4734a715e1049ac57214863bf4b847d1d563c065fddc9e",
+    "build/linux-7.3/Module.symvers": "ee995cfaa15c3c0602aaaa0a689bd2476aa9188cf2ad806b1867bf0b98ed05aa",
+    "build/nvidia/kernel-open/nvidia-drm.ko": "053da19916798fddab0b02ab9710c264f2ef16c8503fac264103dd063a0ad9dc",
+    "build/nvidia/kernel-open/nvidia-modeset.ko": "804e841a62ddffc1d9bf9e1af47f5cdf8ac5d5961aef4411989b632675ec13d4",
+    "build/nvidia/kernel-open/nvidia-peermem.ko": "cc0a87540091067ea7f4102968519368e55c3a08296fc39fa2acd58e02965b8d",
+    "build/nvidia/kernel-open/nvidia-uvm.ko": "76db56b7566b0d2678b04d21363b02cc1bedacca01d1c4757e687f6fe2e8f8cd",
+    "build/nvidia/kernel-open/nvidia.ko": "1de68e70d88060520d86ed0a55660f90b8177004381824fee26f7e3bdc5f54df"
+  },
+  "boot_parameter": "power_wrap_drv.p16_lps0_late=1",
+  "installed": false,
+  "boot_tested": false,
+  "full_kernel_built": true,
+  "package": "linux-omarchy-p16-sleep-7.3-26.1-aarch64.pkg.tar.xz",
+  "package_sha256": "721bdbd3d881553466d947d2c3d1dcc59dc3f177a08b9fc0ef7925b67cf27f56",
+  "package_bytes": 213912180,
+  "initramfs_sha256": "de2dc772511d350d2d4a5df01cfe1214b5f586ac7b3c7cfade6502cd987fc559",
+  "initramfs_bytes": 125694260,
+  "kernel_image_bytes": 63982080,
+  "normal_boot_files_bytes": 189676340,
+  "record_kind": "Historical original build, before installation; runtime outcome is recorded separately."
+}

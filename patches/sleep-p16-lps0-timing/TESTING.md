@@ -1,6 +1,34 @@
 # P16 sleep test runbook
 
-Start with phase A, then resume the assistant session after the first reboot.
+**Current checkpoint, 2026-11-07:** `off-01` and `off-02` provide the baseline:
+eight short sleep periods across two AC-powered 120-second lid tests. Phase C
+is complete: the test kernel is running with parameter `Y`. `on-01` and
+`on-02` recorded single continuous sleeps of 121.394864 and 118.451021 seconds,
+ending at lid reopening. `on-long` then completed a single 1131.942415-second
+sleep. All three enabled captures have zero recorded suspend failures and no
+kernel oops. The planned AC sequence is complete; battery behavior and
+long-term reliability remain unverified. The graphics driver has not been
+changed. Results and the persistent SDHCI resume warning are summarized in
+`results/sleep-comparison-2026-11-07.json` and [README.md](README.md#runtime-results-2026-11-07).
+
+**Boot default:** Following those tests, `linux-omarchy-p16-sleep` is now the
+persistent default, with `power_wrap_drv.p16_lps0_late=1` verified in its UKI
+and generator configuration. The current session already reports `Y`; this
+default change did not require a reboot. A subsequent normal reboot confirmed
+`7.3.0-26-omarchy-p16-sleep1` and `Y`. Both stock/recovery UKIs are unchanged.
+Use phase E to verify or reproduce the default setting. Phases A–D below are
+the original installation and test sequence; do not restart them on this
+already-configured machine.
+
+`off-03` ended before the lid test and is invalid. `off-03-retry` encountered
+a graphics kernel NULL dereference with the timing experiment disabled and
+required a forced reboot. Investigation of that crash is deferred; it is not
+evidence that the timing patch works or fails. Saved evidence is in
+`validation/hang-20261107-1422/diagnosis.json` and the accompanying journals.
+
+For a fresh checkout, first build/package the kernel and stage its initramfs
+using [REPRODUCING.md](REPRODUCING.md). For a fresh installation of those built
+artifacts, start with phase A, then resume the assistant session after the first reboot.
 Run the blocks in order. If a command fails, or the boot-image build reports
 `ERROR`, stop and share the output before rebooting. These instructions use
 the package already built locally; rebuilding the kernel is unnecessary.
@@ -14,15 +42,29 @@ Keep the same charger, USB/dock and display setup for all tests.
    ```bash
    cd ~/n1x-ormarchy-patch/patches/sleep-p16-lps0-timing
    mkdir -p validation
-   printf '%s  %s\n' '721bdbd3d881553466d947d2c3d1dcc59dc3f177a08b9fc0ef7925b67cf27f56' 'release/linux-omarchy-p16-sleep-7.3-26.1-aarch64.pkg.tar.xz' | sha256sum -c -
+   python - <<'PY'
+   import hashlib, json
+   from pathlib import Path
+   info = json.loads(Path('release/build-info.json').read_text())
+   package = Path('release') / info['package']
+   with package.open('rb') as stream:
+       digest = hashlib.file_digest(stream, 'sha256').hexdigest()
+   if digest != info['package_sha256']:
+       raise SystemExit('STOP: package checksum differs from this build record')
+   print(package, 'OK')
+   print('Measured kernel + initramfs bytes:', info['normal_boot_files_bytes'])
+   PY
    uname -r
    df -h /boot
    ```
 
-   Expect `OK`, the current `7.3.0-26-omarchy`, and roughly 474 MiB free.
-   The new normal UKI needs approximately 181 MiB. Leave at least 250 MiB
+   Expect `OK` and the original `7.3.0-26-omarchy` before a fresh installation.
+   Compare free space with this build's measured size. The original test's
+   normal UKI needed approximately 181 MiB. Leave at least 250 MiB
    free before installation. This threshold includes room beyond the measured
    image; it does not budget an extra test fallback or snapshot image.
+   A rebuild has its own package hash because it generates a new signing key.
+   Do not use the original historical package hash to verify a fresh build.
 
 2. Save the original boot configuration and image hashes **once, before
    installation**. Retain these files across all later phases:
@@ -72,16 +114,34 @@ Keep the same charger, USB/dock and display setup for all tests.
    The menu must contain `linux-omarchy`, `linux-omarchy-fallback`, and
    `linux-omarchy-p16-sleep`. The Limine command handles its own sudo prompt.
 
-6. Save your work and reboot with a visible menu:
+6. Select the test kernel for the next boot only:
 
    ```bash
-   systemctl reboot --boot-loader-menu=15s
+   sudo bootctl set-oneshot Omarchy.linux-omarchy-p16-sleep
    ```
 
-   Expand **Omarchy**, if necessary, and select **linux-omarchy-p16-sleep**.
-   If the menu timeout command is rejected, stop and share its output. If the
-   test kernel cannot boot normally, restart and select **linux-omarchy**;
-   **linux-omarchy-fallback** is the existing text-console rescue entry.
+   If this command fails, stop and share its output. It sets Limine's
+   `LoaderEntryOneShot` variable without changing the configured default.
+   After it succeeds, save your work and reboot:
+
+   ```bash
+   systemctl reboot
+   ```
+
+   Limine should automatically select the test entry. Its menu can remain
+   hidden because this installation uses `quiet: yes`. To reveal it manually,
+   use `systemctl reboot --boot-loader-menu=30s` instead and press a key during
+   the bootloader's wait. Expand **Omarchy**, if necessary, and select
+   **linux-omarchy-p16-sleep**. If the test kernel cannot boot normally,
+   restart and select **linux-omarchy**; **linux-omarchy-fallback** is the
+   existing text-console rescue entry.
+
+   Do not use `systemctl reboot --boot-loader-entry=Omarchy.linux-omarchy-p16-sleep`
+   here. On this system, logind lists UKI filenames, while Limine publishes
+   dotted menu identifiers in EFI `LoaderEntries`; systemctl rejects the
+   Limine identifier. `bootctl set-oneshot` writes the identifier directly.
+   This behavior was checked against [systemd v262's implementation](https://github.com/systemd/systemd/blob/v262/src/bootctl/bootctl-set-efivar.c)
+   and [Limine v12.9.6's implementation](https://github.com/Limine-Bootloader/Limine/blob/v12.9.6/common/lib/bli.c).
 
 7. After login, verify the running kernel and drivers:
 
@@ -107,19 +167,26 @@ sudo python capture-sleep.py --mode off --label off-01 --seconds 120
 ```
 
 Wait for `ARMED`. Close the lid completely for 120 seconds, using an external
-timer. Open it, wait 10 seconds for recovery, then press Enter in that terminal.
+timer. Open it, wait 10 seconds for recovery, then type `done` and press Enter
+in that terminal. Both waits are manual; the script does not count them down.
 The script does not initiate suspend or set a wake timer. It keeps capturing
-every cycle until you press Enter, including repeated wakes while closed.
+every cycle until you enter `done`, including repeated wakes while closed.
+Blank lines are ignored, so an extra newline pasted with the launch command
+cannot end the capture immediately.
 
-Repeat with labels `off-02` and `off-03`. Results go into separate timestamped
+Repeat with label `off-02`. Results go into separate timestamped
 directories under `validation/`. `summary.json` reports the actual
-`machine_suspend` durations, success/failure count changes, and last wake IRQ;
+`machine_suspend` durations, total capture duration, success/failure count
+changes, and last wake IRQ;
 the directory also contains snapshots, the trace and the journal.
+An empty sleep-duration list is not a successful sleep result. Check the
+capture duration and journal before counting that run; the wake IRQ may be
+left over from an earlier test.
 
 Only the `power:suspend_resume` tracepoint is enabled in a temporary isolated
 trace instance. Its boot-time clock includes time spent suspended. No wake
-sources are disabled, and no function tracing is enabled. Enter or Ctrl-C
-removes the instance. These traces measure suspend duration, not proof of a
+sources are disabled, and no function tracing is enabled. Entering `done` or
+pressing Ctrl-C removes the instance. These traces measure suspend duration, not proof of a
 particular CPU power residency.
 
 ## C. Enable the experiment and reboot
@@ -138,10 +205,10 @@ changing the configuration file alone is insufficient. Wait for image
 generation to finish and **CHECKS PASSED**, then:
 
 ```bash
-systemctl reboot --boot-loader-menu=15s
+sudo bootctl set-oneshot Omarchy.linux-omarchy-p16-sleep
 ```
 
-Select **linux-omarchy-p16-sleep** again. After login:
+If that succeeds, save your work and run `systemctl reboot`. After login:
 
 ```bash
 uname -r
@@ -154,15 +221,15 @@ still `N`, stop; enabling the file did not change the currently running kernel.
 
 ## D. Capture enabled tests
 
-Repeat the same physical setup and three 120-second lid tests:
+Keep the same physical setup and start with one 120-second lid test:
 
 ```bash
 cd ~/n1x-ormarchy-patch/patches/sleep-p16-lps0-timing
 sudo python capture-sleep.py --mode on --label on-01 --seconds 120
 ```
 
-Then use labels `on-02` and `on-03`. If these behave normally, perform a
-15-minute test:
+Review that result before continuing with `on-02`, matching the two completed
+baseline runs. If both behave normally, perform a 15-minute test:
 
 ```bash
 sudo python capture-sleep.py --mode on --label on-long --seconds 900
@@ -175,15 +242,65 @@ Report any keyboard, display, Wi-Fi or resume problem alongside the saved
 captures. A successful cycle alone is insufficient: the earlier stock kernel
 also completed one 108-second sleep.
 
+## E. Keep the enabled test kernel as the default
+
+This has already been applied on this machine. To verify the current setup:
+
+```bash
+cd ~/n1x-ormarchy-patch/patches/sleep-p16-lps0-timing
+sudo python check-boot.py --mode on --default test
+```
+
+To reproduce the default change after completing phase C:
+
+```bash
+sudo python set-default.py test
+```
+
+This verifies the installed test UKI is enabled, saves the existing Limine
+configuration, and sets `default_entry: Omarchy/linux-omarchy-p16-sleep`.
+It uses a menu path supported by the installed Limine 12.9.6, so changing menu
+positions does not redirect the default. It preserves the menu and timeout,
+and disables `remember_last_entry` if that setting was present. It verifies
+the result and restores the prior configuration if the final check fails.
+No image rebuild or reboot is performed.
+
+The enabled argument remains in
+`/etc/limine-entry-tool.d/zzzz-p16-sleep-test.conf` for later test UKI rebuilds.
+The compiled parameter defaults to off, so removing the argument would disable
+the timing fix. Keep the switch; eliminating it would require a kernel rebuild.
+
+The installed Limine documentation at `/usr/share/doc/limine/CONFIG.md`
+describes the precedence: an explicit `default_entry` overrides the persistent
+EFI `LoaderEntryDefault` variable. Therefore `bootctl set-default` alone would
+not change this machine's configured default. A `bootctl set-oneshot` request
+still takes precedence for a single boot.
+
 ## Returning to the original kernel
 
-Reboot and select **linux-omarchy**, then check `uname -r` returns
-`7.3.0-26-omarchy`. This restores the original sleep driver immediately. If
-Limine remembers selections, choosing the stock entry also restores that
-remembered choice. Keep the test package and logs while reviewing results.
+For one stock-kernel boot, run:
+
+```bash
+sudo bootctl set-oneshot Omarchy.linux-omarchy
+```
+
+If it succeeds, save your work and run `systemctl reboot`. Check that
+`uname -r` returns `7.3.0-26-omarchy`. The following boot will use the configured
+test default again. To restore the stock kernel as the persistent default:
+
+```bash
+cd ~/n1x-ormarchy-patch/patches/sleep-p16-lps0-timing
+sudo python set-default.py stock
+```
+
+The menu also retains **linux-omarchy** and the text-console rescue entry
+**linux-omarchy-fallback**. Keep the test package and logs while reviewing
+results.
 
 To return the test entry to off-mode instead, repeat phase C with
-`prepare-test-mode.py off` and `check-boot.py --mode off`, then reboot.
+`prepare-test-mode.py off` and `check-boot.py --mode off --default test`, then
+reboot. Use `--default stock` instead if you have restored the stock default.
+Changing the mode requires rebuilding the test UKI, not the kernel itself.
 
 The repository's root `manage.sh` still targets the stock kernel and should
 not be retargeted or used to apply another Wi-Fi override to this test kernel.

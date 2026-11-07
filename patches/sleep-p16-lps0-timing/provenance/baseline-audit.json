@@ -1,0 +1,14 @@
+{
+  "schema": 1,
+  "kernel": "7.3.0-26-omarchy",
+  "package": "linux-omarchy 7.3-26",
+  "canonical_hash_format": "SHA-256 of UTF-8 json.dumps(value, sort_keys=True, separators=(\",\", \":\")); no newline",
+  "module_count": 8506,
+  "module_paths_sha256": "a20cd09618f6ea4db1912c829b3e075e22be0391fe56f873dd2a21c4b1f29e3a",
+  "exported_symbol_count": 32943,
+  "exported_symbol_crcs_sha256": "3390475aac489519bdacdbf60b82be66912282b2c643e4160f551629813f8a16",
+  "patched_wifi_text_sha256": "63fef98977b6d693098de1ca8dc9ef8a15bc79dcdd1379b2882229f016b1d814",
+  "wifi_patch_sha256": "ddae4098508075d72cdb2a4fa020f803f83ca761af3e9f2c5edd23ef6b89af83",
+  "config_sha256": "0e9a79eab46abe9aa655302599e5dab9688b1f89e51dab0a3c600b14d2aae0a4",
+  "original_module_symvers_sha256": "ee995cfaa15c3c0602aaaa0a689bd2476aa9188cf2ad806b1867bf0b98ed05aa"
+}

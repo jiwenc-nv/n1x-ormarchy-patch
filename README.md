@@ -5,6 +5,8 @@ command. Each patch keeps its source, builder, and per-kernel releases in its
 own folder. The shared manager includes the MT7925 Wi-Fi reset crash fix.
 The separate [P16 sleep experiment](patches/sleep-p16-lps0-timing/README.md)
 contains an opt-in whole-kernel build and is not registered with that manager.
+Its [fresh-checkout reproduction guide](patches/sleep-p16-lps0-timing/REPRODUCING.md)
+covers pinned sources/toolchains, packaging, boot setup, tests and recovery.
 
 ```text
 target.json                         Shared kernel/package/source commit and patch order

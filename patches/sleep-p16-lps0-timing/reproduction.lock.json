@@ -1,0 +1,26 @@
+{
+  "schema": 1,
+  "source_lock_sha256": "3e4ddef160c1fbb333c0e82edac1eca5052cf9092c4d5af472c6c366ec6dc52c",
+  "host_toolchain_packages": {
+    "gcc": "16.1.1+r12+g301eb08fa2c5-1",
+    "binutils": "2.46+r70+g155188ea10a7-1",
+    "clang": "23.1.4-1.1",
+    "llvm-libs": "23.1.4-1.1",
+    "pahole": "1:1.32-1"
+  },
+  "nvidia_patches": [
+    "nvidia-0003-set-oled-edp-brightness-over-aux.patch",
+    "nvidia-0004-drive-both-displays-of-a-dock-on-one-n1x-usb4-port.patch",
+    "nvidia-0005-retrain-the-link-after-the-sink-was-unplugged.patch",
+    "nvidia-0006-set-a-mode-afresh-on-a-sink-that-comes-back-through-a-usb4-tunnel.patch",
+    "nvidia-0007-train-a-tunnelled-link-again-when-the-sink-cannot-decode-it.patch",
+    "nvidia-0008-free-the-semaphore-surface-callback-when-the-waiter-is-already-signalled.patch",
+    "nvidia-0009-report-usb-c-connectors-as-displayport.patch"
+  ],
+  "provenance_sha256": {
+    "nvidia-source-checksums.json": "7e4d6f5c137536c600b8425a6585a8b71a931cd305cabf2aac75fac7544c8441",
+    "nvidia-dkms.conf": "cc553802e1bc47e9464cf1c458cfb71bed1c47f5a8c981f3b7f4f7e6d94890de",
+    "baseline-audit.json": "c045eec232f7cbd6a382a775ea605f466ede35cd1178cac9af901d9860ded494",
+    "build-environment.json": "e71653a6095c2e4505a16189b99b0fd32b88104d6ddafa8f99b30749b25f790c"
+  }
+}

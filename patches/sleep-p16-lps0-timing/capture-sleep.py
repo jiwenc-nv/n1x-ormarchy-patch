@@ -61,6 +61,12 @@ def interrupted(*_):
     raise KeyboardInterrupt
 
 
+def wait_for_done():
+    """Ignore stray newlines, including those pasted with the launch command."""
+    while input('Type done and press Enter after the test to stop capturing: ').strip().lower() != 'done':
+        print('Still capturing. A blank Enter does not stop the capture.', flush=True)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--mode', required=True, choices=('off', 'on'))
@@ -107,8 +113,9 @@ def main():
         (instance / 'tracing_on').write_text('1')
         status = 'armed'
         print(f'ARMED: {output}', flush=True)
-        print(f'Close the lid for {args.seconds} seconds. Reopen it, wait 10 seconds, then press Enter here.', flush=True)
-        input('The capture continues across every wake while the lid is closed. ')
+        print(f'Close the lid for {args.seconds} seconds. Reopen it, wait 10 seconds, then type done and press Enter here.', flush=True)
+        print('Use an external timer; these waits are manual. Capture continues across every wake while the lid is closed.', flush=True)
+        wait_for_done()
         status = 'finished'
     except (KeyboardInterrupt, EOFError):
         status = 'cancelled'
@@ -127,6 +134,7 @@ def main():
         after = snapshot()
         (output / 'after.json').write_text(json.dumps(after, indent=2)+'\n')
         summary = {'status': status, 'mode': args.mode, 'planned_lid_seconds': args.seconds,
+                   'capture_elapsed_seconds': round(after['boottime_seconds'] - before['boottime_seconds'], 6),
                    'machine_suspend_seconds': periods(trace_text),
                    'boot_id': before['boot_id'], 'last_wake_irq': after['wake_irq']}
         for name in ('success', 'fail'):
@@ -134,6 +142,9 @@ def main():
                 summary[name + '_delta'] = int(after['suspend_stats'][name]) - int(before['suspend_stats'][name])
             except (KeyError, ValueError):
                 summary[name + '_delta'] = None
+        if not summary['machine_suspend_seconds']:
+            summary['warning'] = ('No completed machine_suspend period was captured. '
+                                  'This is not evidence of successful sleep; last_wake_irq may be from an earlier test.')
         (output / 'summary.json').write_text(json.dumps(summary, indent=2)+'\n')
         with (output / 'journal.log').open('w') as log:
             subprocess.run(['journalctl', '-b', '--since', '@'+str(int(start_epoch)),

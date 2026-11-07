@@ -1,0 +1,113 @@
+{
+  "runs": [
+    {
+      "capture": "off-01-20261107-140837-984324",
+      "mode": "off",
+      "sleep_periods_seconds": [
+        2.528248,
+        2.968186,
+        2.620076,
+        2.87014
+      ],
+      "sleep_total_seconds": 10.98665,
+      "lid_closed_seconds": 120.985241,
+      "last_wake_irq": "72",
+      "success_delta": 4,
+      "fail_delta": 0,
+      "ac_online_before_and_after": true,
+      "kernel_oops_in_saved_journal": false
+    },
+    {
+      "capture": "off-02-20261107-141353-198589",
+      "mode": "off",
+      "sleep_periods_seconds": [
+        1.969176,
+        1.559341,
+        1.989599,
+        2.056408
+      ],
+      "sleep_total_seconds": 7.574524,
+      "lid_closed_seconds": 121.556147,
+      "last_wake_irq": "72",
+      "success_delta": 4,
+      "fail_delta": 0,
+      "ac_online_before_and_after": true,
+      "kernel_oops_in_saved_journal": false
+    },
+    {
+      "capture": "on-01-20261107-144632-603590",
+      "mode": "on",
+      "sleep_periods_seconds": [
+        121.394864
+      ],
+      "sleep_total_seconds": 121.394864,
+      "lid_closed_seconds": 127.118845,
+      "last_wake_irq": "72",
+      "success_delta": 1,
+      "fail_delta": 0,
+      "ac_online_before_and_after": true,
+      "kernel_oops_in_saved_journal": false
+    },
+    {
+      "capture": "on-02-20261107-145021-817824",
+      "mode": "on",
+      "sleep_periods_seconds": [
+        118.451021
+      ],
+      "sleep_total_seconds": 118.451021,
+      "lid_closed_seconds": 123.660196,
+      "last_wake_irq": "72",
+      "success_delta": 1,
+      "fail_delta": 0,
+      "ac_online_before_and_after": true,
+      "kernel_oops_in_saved_journal": false,
+      "trace_losses": [],
+      "patch_parameter_before_and_after": [
+        "Y",
+        "Y"
+      ]
+    },
+    {
+      "capture": "on-long-20261107-145400-522484",
+      "mode": "on",
+      "planned_lid_seconds": 900,
+      "sleep_periods_seconds": [
+        1131.942415
+      ],
+      "sleep_total_seconds": 1131.942415,
+      "lid_closed_seconds": 1137.317228,
+      "last_wake_irq": "72",
+      "success_delta": 1,
+      "fail_delta": 0,
+      "ac_online_before_and_after": true,
+      "kernel_oops_in_saved_journal": false,
+      "trace_losses": [],
+      "patch_parameter_before_and_after": [
+        "Y",
+        "Y"
+      ],
+      "known_resume_warning": "Trying to free already-free IRQ 330 in SDHCI / PCIe hotplug teardown; also observed on the original kernel."
+    }
+  ],
+  "assessment": "Planned AC validation complete. All three enabled tests recorded single continuous sleep periods aligned with lid reopening: 121.394864s, 118.451021s, and 1131.942415s. No suspend failure or kernel oops was recorded in these enabled tests. Both completed off-mode baselines repeatedly woke within 1.6\u20133 seconds. This supports the timing change for the observed premature-wake symptom on this machine and setup.",
+  "next_test": null,
+  "limitations": [
+    "All completed matched comparisons used AC power; battery behavior remains untested.",
+    "Three successful enabled runs do not establish long-term reliability or causality conclusively; all enabled runs share one boot.",
+    "These trace durations do not measure hardware low-power residency or battery drain.",
+    "The earlier off-03-retry graphics crash remains unresolved and deferred by user request.",
+    "The pre-existing SDHCI/PCIe already-free-IRQ warning recurred on the long test resume."
+  ],
+  "post_long_check": {
+    "kernel": "7.3.0-26-omarchy-p16-sleep1",
+    "patch_parameter": "Y",
+    "nvidia_driver": "615.78.08",
+    "nvidia_smi": "successful",
+    "network_connectivity": "full"
+  },
+  "post_default_reboot": {
+    "kernel": "7.3.0-26-omarchy-p16-sleep1",
+    "patch_parameter": "Y",
+    "confirmed_by": "User-provided uname -r and parameter output after a normal reboot, 2026-11-07; rechecked locally during archive audit."
+  }
+}

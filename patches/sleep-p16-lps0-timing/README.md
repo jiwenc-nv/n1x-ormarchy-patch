@@ -3,16 +3,20 @@
 An opt-in, one-driver experiment for the intermittent immediate wake on the
 ASUS ProArt P16 H7607BA, BIOS `H7607BA.304.L38`. This is a **whole-kernel build**:
 `power_wrap_drv` is built in, so replacing a `.ko` cannot change its callbacks.
-The experiment has not yet been shown to fix the laptop's sleep problem.
+Three enabled AC-powered lid tests completed continuous sleeps, including an
+18-minute-52-second run, after two off-mode baselines repeatedly woke within
+1.6–3 seconds. This supports the timing fix for the observed premature wakes;
+battery behavior and long-term reliability remain unverified.
 
 Use [TESTING.md](TESTING.md) for the installation commands, reboot checkpoints,
 off/on lid tests and recovery steps. The helper scripts only change system
-state when you explicitly run the documented installation/rebuild commands;
+state when you explicitly run the documented installation/rebuild/default commands;
 the capture script uses a temporary trace instance during each manual test.
+Start with [REPRODUCING.md](REPRODUCING.md) when building from a fresh checkout.
 
 ## Exact baseline
 
-- Running kernel: `7.3.0-26-omarchy`, package `linux-omarchy 7.3-26`.
+- Original kernel: `7.3.0-26-omarchy`, package `linux-omarchy 7.3-26`.
 - [Pinned Omarchy recipe](https://github.com/omacom/omarchy-pkgs/tree/49250dc672819eb8b49727defa03de8b8f1c3e74/pkgbuilds/linux-omarchy-aarch64).
 - The cached installed package's trusted Omarchy signature was verified. Its
   `.BUILDINFO` PKGBUILD SHA-256 matches that recipe exactly. Recipe source
@@ -54,16 +58,25 @@ requires exact ASUS/model/BIOS matches, MT8901, s2idle, and firmware function
 mask `0x3f8`. An enabled cycle adds three seconds before sleep. A future BIOS
 version requires a fresh review of the guard and firmware behavior.
 
+The current build still needs this argument: its read-only boolean parameter
+defaults to false. Keep it in the test entry's persistent configuration and
+UKI; it does not need to be entered at each boot. Making the behavior default-on
+in the driver would require another kernel build and validation. Retaining the
+switch allows off-mode comparisons without rebuilding the kernel.
+
 The full build also carries forward `../wifi-mt7925-reset/fix.patch`, already
 active on this laptop. It is applied inside the mt76 source directory. NVIDIA
-615.78.08 is rebuilt from a copy of the installed, patched DKMS source; the
-copy's checksums are retained in `build/nvidia-source-checksums.json`.
+615.78.08 is reconstructed from its pinned archive and the seven distribution
+patches. All 4,004 files must match `provenance/nvidia-source-checksums.json`,
+the source manifest saved before the original tested build. The original
+build copied installed DKMS sources; new builds no longer depend on `/usr/src`.
 
 ## Local build
 
 Run as the normal user, from this directory:
 
 ```bash
+python build.py doctor
 python build.py tools
 python build.py prepare
 python build.py build --jobs 6
@@ -74,8 +87,8 @@ python build.py image
 `tools` downloads pinned, signed Arch ARM packages and extracts them locally;
 it does not install packages. `prepare` checks the pinned inputs, extracts a
 fresh source tree, applies the vendor and local patches, runs `olddefconfig`,
-and refuses a configuration change. It also requires the installed source at
-`/usr/src/nvidia-615.78.08`. If interrupted, rename `build/` before preparing
+and refuses a configuration change. It reconstructs and checks NVIDIA sources
+from the pinned inputs. If interrupted, rename `build/` before preparing
 again; `build` can resume a prepared compilation.
 
 The test release is `7.3.0-26-omarchy-p16-sleep1`, intended for a separate
@@ -93,9 +106,10 @@ subpackage. Keep the complete local build tree for future module builds.
 Installing the package later will invoke the machine's normal kernel hooks,
 so boot-image capacity and entry selection must be checked before installation.
 
-`package` first compares the Wi-Fi driver's machine code with the currently
-installed patched module and compares all exported symbol versions against
-the installed kernel headers. `python build.py audit` reruns those checks.
+`package` compares the Wi-Fi driver's machine code, the kernel module set and
+all exported symbol versions against checksummed references archived from
+the original installed kernel and Wi-Fi override. The old kernel and headers
+need not remain installed to run these checks. `python build.py audit` reruns them.
 
 `image` generates an initramfs under `release/` using the machine's current
 mkinitcpio configuration and locally staged modules. Post hooks are disabled;
@@ -153,15 +167,59 @@ The 2026-11-07 build and packaging completed successfully:
 The full build emitted warnings in unchanged distribution code. The initramfs
 build also reported the unsupported ARM64 microcode hook and possibly missing
 Renesas xHCI firmware. It completed successfully; the required-files check
-above passed. There are no runtime sleep results for this kernel yet.
+above passed.
 
-Installation remains a separate step: retain the current kernel as a recovery
-entry, check the boot entry/default and current free space, then install the
-new package. Nothing has been installed and no boot configuration has changed.
+## Runtime results, 2026-11-07
 
-Then boot the test kernel once without the option, and test it with the
-option enabled. Confirm the kernel release, parameter value, Wi-Fi/NVIDIA
-modules, suspend traces and wake source. Repeat matched lid tests: the last
-instrumented baseline cycle already slept for about 108 seconds successfully,
-so one successful test cannot establish a fix. Rebooting the original kernel
-remains the recovery path.
+The separate test package is installed and was tested with the parameter off
+and on. Both original/recovery boot images retain their saved hashes. The test
+entry was initially selected with `bootctl set-oneshot`. After the successful
+enabled sequence, it was made the persistent default at the user's request:
+`default_entry: Omarchy/linux-omarchy-p16-sleep` in `/boot/limine.conf`.
+The running parameter is `Y`, and the test UKI and its generator drop-in retain
+`power_wrap_drv.p16_lps0_late=1`. All runs below used AC power and the same
+device setup. A subsequent normal reboot confirmed that the test kernel and
+enabled parameter persist.
+
+| Capture | Mode | Sleep periods (seconds) | Recorded suspend failures |
+| --- | --- | --- | --- |
+| off-01 | Off | 2.528, 2.968, 2.620, 2.870 | 0 |
+| off-02 | Off | 1.969, 1.559, 1.990, 2.056 | 0 |
+| on-01 | On | 121.395 | 0 |
+| on-02 | On | 118.451 | 0 |
+| on-long | On | 1131.942 | 0 |
+
+Each enabled run had one continuous `machine_suspend` period ending at lid
+reopening. The long run exceeded its planned 900 seconds: the journal records
+1137.317 seconds with the lid closed. Traces had no dropped/overrun events.
+NVIDIA 615.78.08 and network connectivity were healthy after the long test.
+The approximately three-second `dpm_suspend_late` phase is consistent with
+the experimental settle delay. These measurements do not prove hardware
+low-power residency or reduced battery drain.
+
+The first `off-03` capture stopped before the lid test and is invalid; the
+collector now requires `done` so an extra pasted newline cannot stop it.
+`off-03-retry` encountered a graphics kernel NULL dereference and required a
+forced reboot. Its investigation is deferred by user request. No such oops
+was recorded in the three enabled runs. A pre-existing SDHCI/PCIe hotplug
+`already-free IRQ` warning recurred on the long-test resume; it also appeared
+on the original kernel and is not fixed by this timing patch.
+
+This completes the planned AC test sequence. All enabled tests share one boot;
+battery operation, behavior across further boots, and long-term reliability
+remain unverified. An earlier original-kernel trace also slept for about 108
+seconds, so these results support the candidate without conclusively proving
+causality. Detailed local captures remain under the git-ignored `validation/`
+directory. The compact comparison and original build evidence are archived
+under [results/](results/). The original kernel remains available as the
+recovery entry.
+
+`set-default.py test` makes this boot selection reproducible, and
+`set-default.py stock` selects the original kernel as the persistent default.
+The helper checks the installed images before and after the change, backs up
+the current configuration under `validation/`, and preserves menu entries and
+unrelated settings. It does not rebuild images or reboot. The checker now
+accepts explicit `--default original|test|stock` policies; use
+`sudo python check-boot.py --mode on --default test` for the current setup.
+Configuration checks can be tested without root with
+`python tests/test_boot_default.py`.
