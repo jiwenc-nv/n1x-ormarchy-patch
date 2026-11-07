@@ -1,0 +1,35 @@
+# Package the already verified local build. Invoked by build.py package.
+# This package coexists with linux-omarchy and carries matching NVIDIA modules.
+pkgname=linux-omarchy-p16-sleep
+pkgver=7.3
+pkgrel=26.1
+pkgdesc='Local opt-in P16 LPS0 timing experiment, with matching NVIDIA modules'
+arch=(aarch64)
+license=(GPL-2.0-only MIT)
+depends=(coreutils initramfs kmod 'nvidia-utils=615.78.08')
+options=('!strip' '!debug' '!lto')
+
+package() {
+  local tree="${N1X_SLEEP_ROOT:?Invoke through build.py package}/build/linux-7.3"
+  local nvidia="$N1X_SLEEP_ROOT/build/nvidia"
+  local release=7.3.0-26-omarchy-p16-sleep1
+  local modulesdir="$pkgdir/usr/lib/modules/$release"
+
+  # All output is inside makepkg's staging directory; depmod runs on install.
+  make -j"${N1X_SLEEP_JOBS:-6}" -C "$tree" INSTALL_MOD_PATH="$pkgdir/usr" INSTALL_MOD_STRIP=1 \
+    DEPMOD=/doesnt/exist modules_install
+  rm "$modulesdir/build"
+  install -Dm644 "$tree/arch/arm64/boot/Image" "$modulesdir/vmlinuz"
+  printf '%s\n' "$pkgname" > "$modulesdir/pkgbase"
+
+  local module destination
+  for module in "$nvidia"/kernel-open/*.ko; do
+    destination="$modulesdir/kernel/drivers/video/${module##*/}"
+    install -Dm644 "$module" "$destination"
+    strip --strip-debug "$destination"
+    "$tree/scripts/sign-file" sha512 "$tree/certs/signing_key.pem" \
+      "$tree/certs/signing_key.x509" "$destination"
+    zstd -T1 -q -f --rm "$destination"
+  done
+  install -Dm644 "$nvidia/COPYING" "$pkgdir/usr/share/licenses/$pkgname/NVIDIA-COPYING"
+}

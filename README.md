@@ -2,7 +2,9 @@
 
 A collection of local patches with one shared kernel target and one management
 command. Each patch keeps its source, builder, and per-kernel releases in its
-own folder. Currently includes the MT7925 Wi-Fi reset crash fix.
+own folder. The shared manager includes the MT7925 Wi-Fi reset crash fix.
+The separate [P16 sleep experiment](patches/sleep-p16-lps0-timing/README.md)
+contains an opt-in whole-kernel build and is not registered with that manager.
 
 ```text
 target.json                         Shared kernel/package/source commit and patch order
@@ -151,8 +153,8 @@ touching the same module must be built together as one patch entry.
 
 Whole-kernel changes, firmware changes, and system configuration edits require
 a separate backend with an appropriate verification/rollback contract.
-Unsupported kinds are rejected. No experimental sleep fix is included merely
-because the repository now supports multiple entries.
+Unsupported kinds are rejected. The standalone sleep experiment has no
+`patch.json` and is not included in `manage.sh build`, `apply`, or `rollback`.
 
 ## Validation
 

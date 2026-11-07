@@ -1,0 +1,174 @@
+--- a/drivers/soc/mediatek/power_wrap/power_wrap_lps0.c
++++ b/drivers/soc/mediatek/power_wrap/power_wrap_lps0.c
+@@ -6,9 +6,27 @@
+ #include <linux/acpi.h>
+ #include <linux/bits.h>
+ #include <linux/device.h>
++#include <linux/delay.h>
+ #include <linux/pm.h>
++#include <linux/suspend.h>
++#include <linux/dmi.h>
++#include <linux/moduleparam.h>
+ 
+ #include "power_wrap.h"
++
++/* Experimental A/B switch; retain the packaged timing unless opted in. */
++static bool p16_lps0_late;
++module_param(p16_lps0_late, bool, 0444);
++MODULE_PARM_DESC(p16_lps0_late,
++		"Test early LPS0 notifications on ProArt P16 H7607BA BIOS 304.L38");
++
++static bool pwrap_lps0_late_platform(void)
++{
++	return p16_lps0_late &&
++	       dmi_match(DMI_SYS_VENDOR, "ASUS") &&
++	       dmi_match(DMI_PRODUCT_NAME, "ProArt P16 H7607BA") &&
++	       dmi_match(DMI_BIOS_VERSION, "H7607BA.304.L38");
++}
+ 
+ static const guid_t pwrap_lps0_guid = GUID_INIT(0x11e00d56, 0xce64, 0x47ce,
+ 					     0x83, 0x7b, 0x1f, 0x89, 0x8f, 0x9a, 0xa4, 0x61);
+@@ -29,6 +47,9 @@
+ 	bool screen_off;
+ 	bool ms_entered;
+ 	bool lps0_entered;
++	bool display_pending;
++	bool late_cycle;
++	bool attempted;
+ };
+ 
+ static int pwrap_lps0_dsm(struct pwrap_lps0 *lps0, unsigned int function)
+@@ -84,11 +105,114 @@
+ 	pwrap_lps0_restore(lps0);
+ }
+ 
++/* Retain each attempted notification until its matching exit succeeds. */
++static int pwrap_lps0_restore_late(struct pwrap_lps0 *lps0)
++{
++	int ret = 0;
++
++	if (lps0->lps0_entered) {
++		if (pwrap_lps0_dsm(lps0, PWRAP_LPS0_EXIT))
++			ret = -EIO;
++		else
++			lps0->lps0_entered = false;
++	}
++	if (lps0->display_pending) {
++		if (pwrap_lps0_dsm(lps0, PWRAP_LPS0_DISPLAY_ON))
++			ret = -EIO;
++		else
++			lps0->display_pending = false;
++	}
++	if (lps0->ms_entered) {
++		if (pwrap_lps0_dsm(lps0, PWRAP_LPS0_MS_EXIT))
++			ret = -EIO;
++		else
++			lps0->ms_entered = false;
++	}
++	if (lps0->screen_off) {
++		if (pwrap_lps0_dsm(lps0, PWRAP_LPS0_SCREEN_ON))
++			ret = -EIO;
++		else
++			lps0->screen_off = false;
++	}
++	if (!ret)
++		lps0->attempted = false;
++	return ret;
++}
++
++static int pwrap_lps0_suspend_late(struct device *dev)
++{
++	struct pwrap_driver_data *priv = dev_get_drvdata(dev);
++	struct pwrap_lps0 *lps0 = priv->lps0;
++	int ret;
++
++	if (!lps0)
++		return 0;
++	/* Do not start another cycle while a previous exit remains unacknowledged. */
++	if (lps0->attempted) {
++		ret = pwrap_lps0_restore_late(lps0);
++		if (ret)
++			return ret;
++	}
++	if (priv->plid != PWRAP_PLID_MT8901 ||
++	    pm_suspend_target_state != PM_SUSPEND_TO_IDLE ||
++	    lps0->functions != 0x3f8 || !pwrap_lps0_late_platform())
++		return 0;
++
++	lps0->late_cycle = true;
++	lps0->attempted = true;
++	/* AML may change state even if evaluating an entry method fails. */
++	lps0->screen_off = true;
++	lps0->display_pending = true;
++	ret = pwrap_lps0_dsm(lps0, PWRAP_LPS0_SCREEN_OFF);
++	if (ret)
++		goto restore;
++	lps0->ms_entered = true;
++	ret = pwrap_lps0_dsm(lps0, PWRAP_LPS0_MS_ENTRY);
++	if (ret)
++		goto restore;
++	lps0->lps0_entered = true;
++	ret = pwrap_lps0_dsm(lps0, PWRAP_LPS0_ENTRY);
++	if (ret)
++		goto restore;
++
++	/* Allow a possible delayed EC event to run before suspend_device_irqs(). */
++	msleep(3000);
++	return 0;
++
++restore:
++	/* A failed late callback does not receive resume_early(). */
++	if (pwrap_lps0_restore_late(lps0))
++		dev_warn(dev, "LPS0 late prepare unwind incomplete\n");
++	return ret;
++}
++
++static int pwrap_lps0_resume_early(struct device *dev)
++{
++	struct pwrap_driver_data *priv = dev_get_drvdata(dev);
++	struct pwrap_lps0 *lps0 = priv->lps0;
++
++	if (lps0 && lps0->late_cycle && lps0->attempted)
++		return pwrap_lps0_restore_late(lps0);
++	return 0;
++}
++
++static void pwrap_lps0_complete(struct device *dev)
++{
++	struct pwrap_driver_data *priv = dev_get_drvdata(dev);
++	struct pwrap_lps0 *lps0 = priv->lps0;
++
++	if (!lps0)
++		return;
++	if (lps0->attempted && pwrap_lps0_restore_late(lps0))
++		dev_err(dev, "LPS0 late restore incomplete; pending exits retained\n");
++	lps0->late_cycle = false;
++}
++
+ static int pwrap_lps0_suspend_noirq(struct device *dev)
+ {
+ 	struct pwrap_driver_data *priv = dev_get_drvdata(dev);
+ 
+-	if (priv->lps0)
++	if (priv->lps0 && !priv->lps0->late_cycle)
+ 		pwrap_lps0_prepare(priv->lps0);
+ 	return 0;
+ }
+@@ -97,13 +221,16 @@
+ {
+ 	struct pwrap_driver_data *priv = dev_get_drvdata(dev);
+ 
+-	if (priv->lps0)
++	if (priv->lps0 && !priv->lps0->late_cycle)
+ 		pwrap_lps0_restore(priv->lps0);
+ 	return 0;
+ }
+ 
+ /* The PM core also calls resume_noirq() when a later suspend step fails. */
+ const struct dev_pm_ops pwrap_lps0_pm_ops = {
++	.suspend_late = pwrap_lps0_suspend_late,
++	.resume_early = pwrap_lps0_resume_early,
++	.complete = pwrap_lps0_complete,
+ 	.suspend_noirq = pwrap_lps0_suspend_noirq,
+ 	.resume_noirq = pwrap_lps0_resume_noirq,
+ };

@@ -1,0 +1,78 @@
+{
+  "installed_kernel": "7.3.0-26-omarchy",
+  "package_version": "7.3-26",
+  "recipe_commit": "49250dc672819eb8b49727defa03de8b8f1c3e74",
+  "recipe_sha256": "1cc40b95e0ce10f8736aa85be2afc81915f57208f697645fa021db5fcc02dea3",
+  "installed_config_sha256": "0e9a79eab46abe9aa655302599e5dab9688b1f89e51dab0a3c600b14d2aae0a4",
+  "kernel_patches_applied": 448,
+  "existing_wifi_override_srcversion": "1997298F9F9BAB7E45C8AF9",
+  "existing_wifi_patch_sha256": "ddae4098508075d72cdb2a4fa020f803f83ca761af3e9f2c5edd23ef6b89af83",
+  "candidate_files_changed": [
+    "drivers/soc/mediatek/power_wrap/power_wrap_lps0.c"
+  ],
+  "candidate_patch_sha256": "93b1ecd051a2bee6142b2717a2ca80b38f3ab463b98807ee0caa300953c6c613",
+  "schema": 1,
+  "test_kernel": "7.3.0-26-omarchy-p16-sleep1",
+  "test_pkgbase": "linux-omarchy-p16-sleep",
+  "nvidia_version": "615.78.08",
+  "source_date_epoch": 1794018902,
+  "baseline_driver_sha256": "e7cf6a21d77e3623bff38de49b34b35182ae13a424a6a5777903aa2170306ad1",
+  "candidate_driver_sha256": "ca24ae426078afb1e9a971307ddb95a9f758131862feb0179b5923c8be17c896",
+  "boot_parameter": "power_wrap_drv.p16_lps0_late=1",
+  "origin_pr": "https://github.com/omacom/omarchy-pkgs/pull/1958",
+  "origin_commit": "8abf19a4e9a96dc86d1827593d9e02d34db3db88",
+  "archives": [
+    {
+      "filename": "omarchy-pkgs.tar.gz",
+      "url": "https://codeload.github.com/omacom/omarchy-pkgs/tar.gz/49250dc672819eb8b49727defa03de8b8f1c3e74",
+      "sha256": "1f6c303d927f33921f251461cfae5a2a8c2ed3da458b9519f784cffff2db3f46"
+    },
+    {
+      "filename": "linux-7.3.tar.xz",
+      "url": "https://cdn.kernel.org/pub/linux/kernel/v7.x/linux-7.3.tar.xz",
+      "sha256": "87363c24f10e06321eb362765521094e94471f6bff8bce2d6b3e40f39f004953"
+    },
+    {
+      "filename": "NVIDIA-kernel-module-source-615.78.08.tar.xz",
+      "url": "https://download.nvidia.com/XFree86/NVIDIA-kernel-module-source/NVIDIA-kernel-module-source-615.78.08.tar.xz",
+      "sha256": "17b4f3d195a5ab1fad9aa1f195c9d3a4ad03aceda18bb9fb68a8bd33d7a000f6"
+    }
+  ],
+  "local_tools": [
+    {
+      "name": "bc",
+      "version": "1.08.2-1",
+      "url": "https://arm-mirror.omarchy.org/aarch64/extra/bc-1.08.2-1-aarch64.pkg.tar.xz",
+      "sha256": "46eb4cdf9e195db632780ca4185c686dd7acb37699b4b7ee35c3e8244100d354",
+      "filename": "bc-1.08.2-1-aarch64.pkg.tar.xz"
+    },
+    {
+      "name": "lld",
+      "version": "23.1.4-1.1",
+      "url": "https://arm-mirror.omarchy.org/aarch64/extra/lld-23.1.4-1.1-aarch64.pkg.tar.xz",
+      "sha256": "7375db6e3b962511befcea5c596d933b86aa6e44008768f1c85da7681150a48a",
+      "filename": "lld-23.1.4-1.1-aarch64.pkg.tar.xz"
+    },
+    {
+      "name": "rust",
+      "version": "1:1.99.1-1.1",
+      "url": "https://arm-mirror.omarchy.org/aarch64/extra/rust-1:1.99.1-1.1-aarch64.pkg.tar.xz",
+      "sha256": "23621e769f562a99ce339b49e755f2e8bf222581cd9d5b1a2d93136e3959c341",
+      "filename": "rust-1:1.99.1-1.1-aarch64.pkg.tar.xz"
+    },
+    {
+      "name": "rust-bindgen",
+      "version": "0.73.2-1",
+      "url": "https://arm-mirror.omarchy.org/aarch64/extra/rust-bindgen-0.73.2-1-aarch64.pkg.tar.xz",
+      "sha256": "c353e5151a706687e4ac86ff68c108623a6d3489704ce9c99de1eb8c99a5f637",
+      "filename": "rust-bindgen-0.73.2-1-aarch64.pkg.tar.xz"
+    },
+    {
+      "name": "rust-src",
+      "version": "1:1.99.1-1.1",
+      "url": "https://arm-mirror.omarchy.org/aarch64/extra/rust-src-1:1.99.1-1.1-aarch64.pkg.tar.xz",
+      "sha256": "aae65e66592b09c3e93893e12103e0d02822afb609ae423d80544a3c99bf345f",
+      "filename": "rust-src-1:1.99.1-1.1-aarch64.pkg.tar.xz"
+    }
+  ]
+}
