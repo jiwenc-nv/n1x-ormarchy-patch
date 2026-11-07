@@ -20,7 +20,8 @@ class CaptureInputTests(unittest.TestCase):
         os.write(master, b'\n\n')
         process = subprocess.Popen(
             [sys.executable, '-c',
-             'import runpy, sys; '
+             'import runpy, sys; from pathlib import Path; '
+             'sys.path.insert(0, str(Path(sys.argv[1]).parent)); '
              'runpy.run_path(sys.argv[1])["wait_for_done"](); '
              'print("CAPTURE_STOPPED", flush=True)', str(CAPTURE)],
             stdin=slave, stdout=slave, stderr=slave,

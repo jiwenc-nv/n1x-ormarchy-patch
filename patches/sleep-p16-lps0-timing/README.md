@@ -13,6 +13,9 @@ off/on lid tests and recovery steps. The helper scripts only change system
 state when you explicitly run the documented installation/rebuild/default commands;
 the capture script uses a temporary trace instance during each manual test.
 Start with [REPRODUCING.md](REPRODUCING.md) when building from a fresh checkout.
+For the next unplugged runtime check, [TESTING.md, phase F](TESTING.md#f-measure-battery-drain-with-the-lid-closed)
+uses `capture-sleep.py --battery` to record energy loss, elapsed time, and
+suspend coverage over a 30-minute lid test, followed by a longer test if useful.
 
 ## Exact baseline
 

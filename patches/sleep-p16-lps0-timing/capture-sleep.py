@@ -11,6 +11,8 @@ import subprocess
 import sys
 import time
 
+from battery_metrics import battery_summary, require_battery
+
 ROOT = Path(__file__).resolve().parent
 KERNEL = '7.3.0-26-omarchy-p16-sleep1'
 TRACE = Path('/sys/kernel/tracing')
@@ -39,6 +41,8 @@ def periods(text):
 
 def snapshot():
     stats = Path('/sys/power/suspend_stats')
+    power_supply = {p.name: read(p / 'uevent') for p in Path('/sys/class/power_supply').iterdir()}
+    power_time = time.clock_gettime(time.CLOCK_BOOTTIME)
     return {
         'time': datetime.datetime.now().astimezone().isoformat(),
         'boottime_seconds': time.clock_gettime(time.CLOCK_BOOTTIME),
@@ -51,7 +55,7 @@ def snapshot():
         'suspend_stats': {p.name: read(p) for p in sorted(stats.iterdir()) if p.is_file()},
         'interrupts': read('/proc/interrupts'),
         'wakeup_sources': read('/sys/kernel/debug/wakeup_sources'),
-        'power_supply': {p.name: read(p / 'uevent') for p in Path('/sys/class/power_supply').iterdir()},
+        'power_supply': power_supply, 'power_supply_boottime_seconds': power_time,
         'loaded_modules': {name: read(f'/sys/module/{name}/srcversion')
                            for name in ('nvidia', 'nvidia_drm', 'mt7925e')},
     }
@@ -73,6 +77,8 @@ def main():
     parser.add_argument('--label', required=True)
     parser.add_argument('--seconds', type=int, default=120,
                         help='Planned closed-lid duration; this script does not set a wake timer')
+    parser.add_argument('--battery', action='store_true',
+                        help='Require external power disconnected and a discharging system battery before arming')
     args = parser.parse_args()
     if not re.fullmatch(r'[a-zA-Z0-9_-]+', args.label) or args.seconds < 1:
         parser.error('Use a simple label and a positive duration')
@@ -87,6 +93,16 @@ def main():
         sys.exit('Expected s2idle and pm_test=none. Nothing armed.')
     if not (TRACE / 'instances').is_dir():
         sys.exit('tracefs is unavailable. Nothing armed; report this before testing.')
+    before = snapshot()
+    if args.battery:
+        try:
+            name, values = require_battery(before)
+        except ValueError as exc:
+            sys.exit(f'{exc}. Nothing armed.')
+        print(f'Battery: {name}; {int(values["POWER_SUPPLY_ENERGY_NOW"]) / 1_000_000:.3f} Wh; '
+              f'{values.get("POWER_SUPPLY_CAPACITY", "unknown")}% reported.', flush=True)
+        if values.get('POWER_SUPPLY_CAPACITY') == '100':
+            print('For a more useful drain measurement, first use the laptop unplugged until it is below 100%.', flush=True)
     base = ROOT / 'validation'
     base.mkdir(exist_ok=True)
     uid, gid = ROOT.stat().st_uid, ROOT.stat().st_gid
@@ -95,7 +111,6 @@ def main():
     output = base / f'{args.label}-{stamp}'
     output.mkdir(mode=0o700)
     instance = TRACE / 'instances' / f'p16_lid_{os.getpid()}_{time.time_ns()}'
-    before = snapshot()
     start_epoch = time.time()
     status = 'setup'
     trace_text = ''
@@ -115,6 +130,8 @@ def main():
         print(f'ARMED: {output}', flush=True)
         print(f'Close the lid for {args.seconds} seconds. Reopen it, wait 10 seconds, then type done and press Enter here.', flush=True)
         print('Use an external timer; these waits are manual. Capture continues across every wake while the lid is closed.', flush=True)
+        if args.battery:
+            print('Keep power disconnected until results are saved. Close promptly and finish promptly after the 10-second resume wait.', flush=True)
         wait_for_done()
         status = 'finished'
     except (KeyboardInterrupt, EOFError):
@@ -137,6 +154,8 @@ def main():
                    'capture_elapsed_seconds': round(after['boottime_seconds'] - before['boottime_seconds'], 6),
                    'machine_suspend_seconds': periods(trace_text),
                    'boot_id': before['boot_id'], 'last_wake_irq': after['wake_irq']}
+        summary['battery_test_requested'] = args.battery
+        summary['battery'] = battery_summary(before, after, summary['machine_suspend_seconds'])
         for name in ('success', 'fail'):
             try:
                 summary[name + '_delta'] = int(after['suspend_stats'][name]) - int(before['suspend_stats'][name])

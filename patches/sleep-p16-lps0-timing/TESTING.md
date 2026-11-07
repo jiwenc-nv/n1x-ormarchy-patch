@@ -19,6 +19,7 @@ default change did not require a reboot. A subsequent normal reboot confirmed
 Use phase E to verify or reproduce the default setting. Phases A–D below are
 the original installation and test sequence; do not restart them on this
 already-configured machine.
+The next runtime check is the unplugged battery-drain test in phase F.
 
 `off-03` ended before the lid test and is invalid. `off-03-retry` encountered
 a graphics kernel NULL dereference with the timing experiment disabled and
@@ -275,6 +276,72 @@ describes the precedence: an explicit `default_entry` overrides the persistent
 EFI `LoaderEntryDefault` variable. Therefore `bootctl set-default` alone would
 not change this machine's configured default. A `bootctl set-oneshot` request
 still takes precedence for a single boot.
+
+## F. Measure battery drain with the lid closed
+
+Start with **30 minutes**. If suspend/resume works and the drain is reasonable,
+repeat for **two hours** to reduce the relative effect of gauge rounding and
+the short awake periods at the start/end. There is no battery result yet.
+
+1. Save your work. Disconnect the charger and any USB-C source that supplies
+   power; keep the other peripherals and power settings unchanged. If starting
+   at 100%, use the laptop unplugged until it reports 99% or below so the test
+   does not depend on a possible full-charge gauge plateau. Do not plug in
+   again until the capture has finished saving.
+2. From this directory, run:
+
+   ```bash
+   sudo python capture-sleep.py --mode on --battery --label battery-30m-01 --seconds 1800
+   ```
+
+   `--battery` checks that the system battery reports `Discharging`, that
+   usable `ENERGY_NOW`/`ENERGY_FULL` readings exist, and that AC/USB-C power
+   sources report offline. It ignores peripheral batteries, including this
+   laptop's HID and mouse battery devices. If the check refuses to arm, allow
+   the unplugged telemetry to settle and retry.
+3. After `ARMED`, close the lid promptly. Use a phone/external timer for
+   30 minutes. Open the lid, wait the same 10 seconds used in the AC tests,
+   then promptly type `done` and Enter. Keep the charger disconnected until
+   the JSON summary and saved path appear. There is no automatic wake timer;
+   a longer manual interval is fine and the calculation uses actual elapsed
+   time, not the requested `--seconds` value.
+
+The `battery` section reports energy before/after, Wh used, average capture
+power in watts, energy loss as a percentage of starting full capacity and per
+hour, completed suspend duration, and time outside `machine_suspend`.
+Linux reports `ENERGY_*` in micro-watt-hours; the script converts those units
+directly. It does not convert rounded percentages into energy or infer sleep
+power from the instantaneous awake `POWER_NOW` value. See the
+[kernel power-supply documentation](https://docs.kernel.org/power/power_supply_class.html).
+
+**The energy measurement covers the entire capture**, including closing the
+lid, transitions, and the 10-second recovery wait. The trace shows how much
+of that interval was suspended; it does not provide separate energy counters
+for those phases. Average capture power is therefore an initial estimate for
+this lid-close test, not an isolated measurement of steady-state sleep power.
+Only the endpoints are checked for external power: keep it disconnected
+throughout. No periodic polling, wake timer, or system sleep hook is added.
+
+One continuous sleep covering most of the 30 minutes is expected. Multiple
+short periods would reproduce the premature-wake symptom. A zero energy
+delta does not prove zero drain; the gauge may need a longer interval to show
+the loss. If it reports increasing energy or external power at either end,
+the script withholds the discharge-rate calculation. Review the saved summary
+and trace before extending the duration.
+
+For a follow-up two-hour test after reviewing the first result:
+
+```bash
+sudo python capture-sleep.py --mode on --battery --label battery-2h-01 --seconds 7200
+```
+
+Use the same unplugged setup and manual finish procedure. Battery measurement
+checks can be run without arming a capture:
+
+```bash
+python tests/test_battery_metrics.py
+python tests/test_capture_input.py
+```
 
 ## Returning to the original kernel
 

@@ -137,6 +137,7 @@ for this experiment.
 python tests/test_reproduction.py
 python tests/test_boot_default.py
 python tests/test_capture_input.py
+python tests/test_battery_metrics.py
 python tests/test_lps0_timing.py build/linux-7.3
 python build.py audit
 ```
