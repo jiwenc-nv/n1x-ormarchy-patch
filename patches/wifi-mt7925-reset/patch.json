@@ -1,0 +1,8 @@
+{
+  "schema": 1,
+  "id": "wifi-mt7925-reset",
+  "kind": "kernel-module",
+  "description": "Prevent the MT7925 reset-path NULL-pointer crash",
+  "module": "mt7925e",
+  "stock_path": "kernel/drivers/net/wireless/mediatek/mt76/mt7925/mt7925e.ko"
+}

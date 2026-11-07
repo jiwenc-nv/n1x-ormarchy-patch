@@ -1,13 +1,14 @@
 # Downloaded sources and disposable build/validation evidence
-/.cache/
-/build/
-/release/
-/validation/
+**/.cache/
+**/build/
+**/release/
+**/validation/
 /linux-*/
-/source/
-/*.remote
-/upstream-pci_mac.c
-/*.log
+**/source/
+*.remote
+upstream-pci_mac.c
+*.log
+manage.legacy.sh
 
 # Compiler output, even if accidentally produced outside build/
 *.o

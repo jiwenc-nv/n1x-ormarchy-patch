@@ -1,0 +1,7 @@
+{
+  "schema": 1,
+  "kernel": "7.3.0-26-omarchy",
+  "kernel_package": "linux-omarchy",
+  "source_commit": "c03c1a14507dfaf8b856c2608f9ac216021fc222",
+  "patches": ["wifi-mt7925-reset"]
+}
