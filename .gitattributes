@@ -1,0 +1,3 @@
+# Preserve upstream patch context verbatim; diff context uses a leading space
+# before the original C tabs and is not project indentation.
+*.patch -whitespace

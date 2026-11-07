@@ -1,0 +1,61 @@
+From 5a0af52f845a86f885312c8a39e5705be979cab8 Mon Sep 17 00:00:00 2001
+From: Ashcal9669 <ashcalili@gmail.com>
+Date: Sun, 4 Oct 2026 06:32:11 -0400
+Subject: [PATCH] wifi: mt76: mt7925: do not disable the NAPI of a missing WM2
+ queue on reset
+
+mt7925e_mac_reset() disables the RX NAPIs according to the IRQ map
+masks. mt7925_irq_map sets wm2_complete_mask, but the MT7925 DMA layout
+has no tx_done queue, so MT_RXQ_MCU_WA is never allocated and its NAPI
+is never added. napi_disable() on it dereferences a NULL net_device, so
+any chip reset oopses in the reset worker:
+
+  BUG: kernel NULL pointer dereference, address: 0000000000000aa0
+  Workqueue: mt76 mt7925_mac_reset_work [mt7925_common]
+  RIP: 0010:mutex_lock+0x1c/0x30
+  Call Trace:
+   napi_disable+0x1d/0x40
+   mt7925e_mac_reset+0x375/0x430 [mt7925e]
+   mt7925_mac_reset_work+0xb8/0x220 [mt7925_common]
+
+The worker dies holding locks and the machine stops responding. A burst
+of MCU timeouts is enough to start the reset: on an MT7925 a failed
+association storm produced five "Message ... timeout" lines and then
+the oops above.
+
+Only disable the NAPI when the queue was allocated, which is what
+mt76_for_each_q_rx() already does on the enable side. MT7927 and MT7928
+allocate the queue and are unchanged.
+
+Tested on an MT7925 (14c3:7925) and an MT7927 (14c3:7927), kernel
+7.3.0-rc4, with five chip resets through debugfs chip_reset (idle and
+associated): none oopsed, mt7925e_mac_reset returned 0, the firmware was
+reloaded and both cards reconnected on 6 GHz every time. The unpatched
+driver was not reset on purpose, because it hangs the machine; the oops
+above is from the failure it produced.
+
+Not tested: MT7928, USB parts, a reset while traffic is flowing.
+
+Signed-off-by: Mark Anthony Agarro <markanthonyagarro@gmail.com>
+---
+ mt7925/pci_mac.c | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
+
+diff --git a/mt7925/pci_mac.c b/mt7925/pci_mac.c
+index 280797fa..e13881f0 100644
+--- a/mt7925/pci_mac.c
++++ b/mt7925/pci_mac.c
+@@ -94,7 +94,12 @@ int mt7925e_mac_reset(struct mt792x_dev *dev)
+ 		napi_disable(&dev->mt76.napi[MT_RXQ_MAIN]);
+ 	if (irq_map->rx.wm_complete_mask)
+ 		napi_disable(&dev->mt76.napi[MT_RXQ_MCU]);
+-	if (irq_map->rx.wm2_complete_mask)
++	/* The WM2 queue is only allocated on chips whose DMA layout has one;
++	 * on MT7925 the IRQ map sets the mask but there is no queue and no
++	 * NAPI to disable.
++	 */
++	if (irq_map->rx.wm2_complete_mask &&
++	    dev->mt76.q_rx[MT_RXQ_MCU_WA].ndesc)
+ 		napi_disable(&dev->mt76.napi[MT_RXQ_MCU_WA]);
+ 	if (irq_map->tx.all_complete_mask)
+ 		napi_disable(&dev->mt76.tx_napi);

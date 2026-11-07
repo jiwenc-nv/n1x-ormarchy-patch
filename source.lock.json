@@ -1,0 +1,7 @@
+{
+  "repository": "https://github.com/torvalds/linux.git",
+  "source_ref": "v7.3",
+  "source_commit": "c03c1a14507dfaf8b856c2608f9ac216021fc222",
+  "fix_url": "https://github.com/morrownr/mt76/commit/5a0af52f845a86f885312c8a39e5705be979cab8",
+  "fix_commit": "5a0af52f845a86f885312c8a39e5705be979cab8"
+}
