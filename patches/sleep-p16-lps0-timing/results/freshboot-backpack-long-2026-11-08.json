@@ -1,0 +1,131 @@
+{
+  "date": "2026-11-08",
+  "capture": "battery-freshboot-backpack-long-01-20261108-111006-645787",
+  "original_summary": {
+    "status": "finished",
+    "mode": "on",
+    "planned_lid_seconds": 1800,
+    "capture_elapsed_seconds": 13675.641465,
+    "machine_suspend_seconds": [
+      13601.101312
+    ],
+    "boot_id": "02d747db-4cdf-4142-903d-d3a66de0b4ca",
+    "last_wake_irq": "72",
+    "battery_test_requested": true,
+    "planned_resume_wait_seconds": 60,
+    "auto_finish_on_lid_cycle": true,
+    "wake_trace": {
+      "requested": true,
+      "enabled_events": [
+        "power/wakeup_source_activate",
+        "power/wakeup_source_deactivate"
+      ],
+      "unavailable_events": [],
+      "acpi_event_irqs": [
+        72,
+        141
+      ]
+    },
+    "idle_trace": {
+      "requested": true,
+      "scope": "machine_suspend begin through first subsequent device PM callback",
+      "enabled_events": [
+        "irq/irq_handler_entry",
+        "irq/softirq_entry",
+        "timer/timer_expire_entry",
+        "timer/hrtimer_expire_entry",
+        "timer/timer_start",
+        "timer/hrtimer_start",
+        "ipi/ipi_entry",
+        "ipi/ipi_raise"
+      ],
+      "unavailable_events": []
+    },
+    "battery": {
+      "measurement_scope": "Entire capture, including awake and suspend/resume overhead",
+      "power_check_scope": "Endpoints only; keep all external power disconnected throughout",
+      "endpoints_on_battery": true,
+      "battery": "BAT0",
+      "measurement_seconds": 13675.641457,
+      "energy_before_wh": 77.101,
+      "energy_after_wh": 71.837,
+      "energy_full_before_wh": 99.902,
+      "energy_full_after_wh": 99.902,
+      "energy_used_wh": 5.264,
+      "reported_capacity_before_percent": "77",
+      "reported_capacity_after_percent": "72",
+      "machine_suspend_total_seconds": 13601.101312,
+      "outside_machine_suspend_seconds": 74.540145,
+      "machine_suspend_fraction_percent": 99.455,
+      "average_capture_power_w": 1.3857,
+      "energy_loss_percent_of_full": 5.2692,
+      "energy_loss_percent_of_full_per_hour": 1.3871,
+      "notes": []
+    },
+    "success_delta": 1,
+    "fail_delta": 0
+  },
+  "assessment": "Second successful sleep in the fresh boot; continuous long suspend and low reported power, with no half-second idle loop.",
+  "lid_events": {
+    "closed": "2026-11-08T11:10:15.300508-08:00",
+    "opened": "2026-11-08T14:57:01.656084-08:00"
+  },
+  "actual_post_open_sample_wait_seconds": 60.629721,
+  "freeze_events": [
+    [
+      512.158423,
+      "suspend_resume",
+      "timekeeping_freeze[17] begin"
+    ],
+    [
+      14113.25784,
+      "suspend_resume",
+      "timekeeping_freeze[17] end"
+    ],
+    [
+      14113.257904,
+      "suspend_resume",
+      "timekeeping_freeze[17] begin"
+    ],
+    [
+      14113.258382,
+      "suspend_resume",
+      "timekeeping_freeze[0] end"
+    ]
+  ],
+  "steady_window_event_count_excluding_ten_seconds_at_each_end": 0,
+  "trace_losses": 0,
+  "thermal_endpoints_celsius": {
+    "before": [
+      38,
+      40
+    ],
+    "after": [
+      33,
+      35
+    ]
+  },
+  "gpu_network_probe": "Separate post-test query did not return before the orchestration call was terminated to start the user-requested next test. Recovery status is not inferred from this query.",
+  "comparison": {
+    "yesterday_low_power_capture_w": 1.454,
+    "earlier_high_power_tabletop_capture_w": 11.6898,
+    "current_capture_w": 1.3857
+  },
+  "limitations": [
+    "Whole-capture average includes 74.54 seconds outside machine_suspend.",
+    "External power checked at endpoints only.",
+    "Endpoint temperatures do not measure peak bag temperature.",
+    "Two successful cycles do not establish indefinite or overnight reliability or identify what caused the previous high-power state."
+  ],
+  "next_step": "Same-boot tabletop capture after user opens normal apps, including Slack.",
+  "private_evidence_sha256": {
+    "after.json": "36ffeb37f16c14f4f6ed18f1823f7d01d3d2a2f64cb95489a6ab8d0256deb70e",
+    "before.json": "98b7338bd20beb89fd0a5efbf0b44fb44feca7b3dec715f1b5e249aa4310bbf4",
+    "idle-trace.json": "f6a0a136776ecc3225580f48f31267435b042f47599a25cc1355ca6b6cc8fc2d",
+    "journal.log": "c63c7f541da1c5f14c0715c3e0fe2bfca32d37ba69274f860cbfc34dfef89b7a",
+    "summary.json": "e1240872e63e12209aa9d62df489a13895f581ad7bfba6794973a62ed49aaac9",
+    "trace-stats.txt": "4f4bc3e4aad62ce9032c695f9ac022a8a9c84ff2c5c05b1ae0208c15209c4882",
+    "trace.txt": "814d2486c934ae048ce0229184f83bd110a9b6be8be19bb9a2d5e9244062d4e7",
+    "wake-trace.json": "21a80433427f44ef220bb887ccd37a3ed9245951f85efb5068ce811ff4b1a5ac"
+  }
+}
