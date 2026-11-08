@@ -1,0 +1,115 @@
+{
+  "date": "2026-11-08",
+  "capture": "battery-freshboot-idle-3m-01-20261108-110304-287455",
+  "original_summary": {
+    "status": "finished",
+    "mode": "on",
+    "planned_lid_seconds": 180,
+    "capture_elapsed_seconds": 215.448844,
+    "machine_suspend_seconds": [
+      190.045777
+    ],
+    "boot_id": "02d747db-4cdf-4142-903d-d3a66de0b4ca",
+    "last_wake_irq": "72",
+    "battery_test_requested": true,
+    "planned_resume_wait_seconds": 10,
+    "auto_finish_on_lid_cycle": true,
+    "wake_trace": {
+      "requested": true,
+      "enabled_events": [
+        "power/wakeup_source_activate",
+        "power/wakeup_source_deactivate"
+      ],
+      "unavailable_events": [],
+      "acpi_event_irqs": [
+        72,
+        141
+      ]
+    },
+    "idle_trace": {
+      "requested": true,
+      "scope": "machine_suspend begin through first subsequent device PM callback",
+      "enabled_events": [
+        "irq/irq_handler_entry",
+        "irq/softirq_entry",
+        "timer/timer_expire_entry",
+        "timer/hrtimer_expire_entry",
+        "timer/timer_start",
+        "timer/hrtimer_start",
+        "ipi/ipi_entry",
+        "ipi/ipi_raise"
+      ],
+      "unavailable_events": []
+    },
+    "battery": {
+      "measurement_scope": "Entire capture, including awake and suspend/resume overhead",
+      "power_check_scope": "Endpoints only; keep all external power disconnected throughout",
+      "endpoints_on_battery": true,
+      "battery": "BAT0",
+      "measurement_seconds": 215.448835,
+      "energy_before_wh": 78.031,
+      "energy_after_wh": 77.855,
+      "energy_full_before_wh": 99.902,
+      "energy_full_after_wh": 99.902,
+      "energy_used_wh": 0.176,
+      "reported_capacity_before_percent": "78",
+      "reported_capacity_after_percent": "78",
+      "machine_suspend_total_seconds": 190.045777,
+      "outside_machine_suspend_seconds": 25.403058,
+      "machine_suspend_fraction_percent": 88.209,
+      "average_capture_power_w": 2.9408,
+      "energy_loss_percent_of_full": 0.1762,
+      "energy_loss_percent_of_full_per_hour": 2.9437,
+      "notes": []
+    },
+    "success_delta": 1,
+    "fail_delta": 0
+  },
+  "assessment": "First suspend after normal reboot shows recovery of the long idle pattern and much lower whole-capture power; exact cause of the prior state remains unresolved.",
+  "configuration_match_to_high_power_tabletop": {
+    "kernel": true,
+    "cmdline": true,
+    "patch_parameter": true,
+    "mem_sleep": true,
+    "pm_test": true,
+    "loaded_modules": true
+  },
+  "power_profile": "balanced in both queried boots",
+  "wireplumber": "0.5.19-1 remains installed; no downgrade performed",
+  "intervening_package_change": "Steam and steam-devices removed at 10:39:07 before the 10:48 high-power-boot IRQ capture. That later capture still had the half-second idle exits. Removal alone did not immediately clear them; effects taking effect on reboot cannot be excluded.",
+  "current_apps": "Chrome/Chromium/Slack process-name query after capture found none. No process inventory was captured during the earlier high-power tests, so app-state equality is not established.",
+  "timekeeping_freeze_exit_count": 2,
+  "trace_losses": 0,
+  "thermal_endpoints_celsius": {
+    "before": [
+      38,
+      41
+    ],
+    "after": [
+      33,
+      37
+    ]
+  },
+  "cpu_s2idle_counts_after_first_suspend": {
+    "cpu0_state6": 1,
+    "cpu1_state6": 1,
+    "cpu17_state6": 1
+  },
+  "limitations": [
+    "One successful sleep in the fresh boot does not establish repeated-cycle or overnight reliability.",
+    "Whole-capture power is 2.9408 W and includes 25.40 seconds outside suspend, 11.8 percent of capture time. It is not an isolated steady-state sleep measurement and cannot be equated precisely to yesterday\u2019s 1.45 W.",
+    "Post-opening wait was ten seconds; battery gauge settling remains uncertain.",
+    "Reboot changed driver/hardware initialization and app/session state together; this comparison does not identify which change restored the idle pattern."
+  ],
+  "next_step": "Repeat a short capture in the same boot before changing apps/peripherals, then introduce normal activity incrementally to identify when the half-second pattern returns.",
+  "private_evidence_sha256": {
+    "after.json": "d640a7ff7feac93c96e8c1df843b0113ab8f8b7049c665c9e2bae95758c88cba",
+    "before.json": "6f94d3a17ec644883773e100a2891b58afd7d40c82e5c8a6c1f42d5bc190f493",
+    "idle-trace.json": "f6a0a136776ecc3225580f48f31267435b042f47599a25cc1355ca6b6cc8fc2d",
+    "journal.log": "1efdad601aaf7ff76273c1653fbfd23443ea67df843393da98f8422b0afa663e",
+    "summary.json": "634d05bbd244532ca76cad363a1ad5f3b4823ea234447077c248bae0c95820c2",
+    "trace-stats.txt": "4254d2262e3c229d646fb07c78f2a99038664edf1080b4515d910ae652ee3044",
+    "trace.txt": "b15634b3f75d5eba9f2afeac22fc0d864c043632bc22e88bbecdbdab02aef389",
+    "wake-trace.json": "21a80433427f44ef220bb887ccd37a3ed9245951f85efb5068ce811ff4b1a5ac"
+  }
+}

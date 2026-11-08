@@ -337,3 +337,18 @@ The sample was about 25.8 seconds after lid opening, so the requested 60-second
 gauge-settling interval was still not observed. The periodic interrupt source
 remains unidentified; next capture should cover IRQs, timers, and IPIs within
 s2idle rather than only the ACPI event IRQs.
+
+After a normal reboot, the [first fresh-boot capture](results/freshboot-recovery-2026-11-08.json)
+recorded a 190.045777-second continuous suspend with only two timekeeping
+freeze exits, no trace losses, and one deepest-state s2idle entry per sampled
+CPU. Reported energy loss was 0.176 Wh over 215.448835 seconds (2.9408 W
+including 25.40 seconds outside suspend). Thermal endpoints fell from 38/41
+to 33/37 degrees C. The previous half-second idle pattern disappeared.
+The kernel command line, sleep flag, mode and recorded module source versions
+match the high-power boot; WirePlumber remains 0.5.19 and the power profile
+remains balanced. Chrome/Slack were not running at the post-test check.
+Steam had been removed before the prior boot's last diagnostic, which still
+showed the half-second pattern. Driver/hardware initialization, app/session
+state and uninstall effects taking effect on reboot are not yet isolated.
+This first-cycle recovery does not establish repeated-cycle reliability or
+restore the precision of the earlier two-hour energy measurement.
