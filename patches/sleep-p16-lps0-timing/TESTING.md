@@ -315,6 +315,33 @@ unclean reboot still loses the in-memory trace. These events and the battery
 energy endpoints help investigate waking and power draw separately; software
 suspend duration alone does not prove low hardware power consumption.
 
+To identify the half-second internal activity observed in the high-power
+captures, use a three-minute tabletop test in the same boot:
+
+```bash
+sudo python capture-sleep.py --mode on --battery --idle-details --label battery-idle-irqs-3m-01 --seconds 180 --resume-wait 10
+```
+
+Keep AC and peripherals disconnected. After arming, close the lid for three
+minutes using an external timer, reopen, wait ten seconds and type `done`.
+`--idle-details` implies wake-source tracing and replaces the ACPI-only IRQ
+filter with all handled IRQs, softirq entries, timer starts/expirations, and
+IPI entries/raises supported by this kernel. Conditional event triggers enable
+these broad events at `machine_suspend` begin and disable them at the first
+subsequent device PM callback, across every captured suspend cycle. This includes
+a short part of early resume after `machine_suspend` ends. Ordinary PM and wake-source events remain
+enabled throughout. The temporary per-CPU buffers are increased to 8 MiB.
+Available and missing events are reported and saved in `idle-trace.json`.
+
+This is a diagnostic for the source of activity; added tracing can perturb
+timing and power, and the ten-second wait is not a settled battery measurement.
+Check `trace-stats.txt` for overruns before interpreting missing events.
+Timer expiry records include callback functions; align IRQ, timer and IPI
+events with the first timekeeping unfreeze following each half-second interval.
+Correlated events are evidence to investigate, not automatic proof of cause.
+Cleanup removes event triggers and the temporary trace instance. The collector
+does not start suspend, change the kernel, or persist tracing configuration.
+
 Start with **30 minutes**. If suspend/resume works and the drain is reasonable,
 repeat for **two hours** to reduce the relative effect of gauge rounding and
 the short awake periods at the start/end. The first 30-minute test is now

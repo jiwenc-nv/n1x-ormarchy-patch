@@ -69,6 +69,45 @@ def interrupted(*_):
     raise KeyboardInterrupt
 
 
+def configure_idle_trace(instance, registered):
+    """Gate noisy events to machine_suspend; keep the ordinary PM trace on."""
+    events = (
+        'irq/irq_handler_entry', 'irq/softirq_entry',
+        'timer/timer_expire_entry', 'timer/hrtimer_expire_entry',
+        'timer/timer_start', 'timer/hrtimer_start',
+        'ipi/ipi_entry', 'ipi/ipi_raise',
+    )
+    result = {'scope': 'machine_suspend begin through first subsequent device PM callback',
+              'enabled_events': [], 'unavailable_events': []}
+    resume_trigger = instance / 'events/power/device_pm_callback_start/trigger'
+    if not resume_trigger.is_file():
+        raise RuntimeError('Device PM callback trigger unavailable; nothing armed')
+    for event in events:
+        target = instance / 'events' / event
+        if not (target / 'enable').is_file():
+            result['unavailable_events'].append(event)
+            continue
+        # A new instance starts disabled. Event triggers soft-enable the target.
+        # No ACPI-only filter: record every IRQ handled during machine_suspend.
+        for command, trigger, condition in [
+            ('enable_event', instance / 'events/power/suspend_resume/trigger',
+             ' if action == "machine_suspend" && start == 1'),
+            ('disable_event', resume_trigger, ''),
+        ]:
+            rule = f'{command}:{event.replace("/", ":")}{condition}'
+            trigger.write_text(rule)
+            registered.append((trigger, rule))
+        result['enabled_events'].append(event)
+    if 'irq/irq_handler_entry' not in result['enabled_events']:
+        raise RuntimeError('Broad IRQ trace is unavailable; nothing armed')
+    return result
+
+
+def remove_idle_triggers(instance, registered):
+    for trigger, rule in reversed(registered):
+        trigger.write_text('!' + rule)
+
+
 def wait_for_done():
     """Ignore stray newlines, including those pasted with the launch command."""
     while input('Type done and press Enter after the test to stop capturing: ').strip().lower() != 'done':
@@ -87,7 +126,10 @@ def main():
                         help='Manual wait after reopening before typing done, in seconds (default: 10)')
     parser.add_argument('--wake-details', action='store_true',
                         help='Also trace wake-source activity and ACPI event IRQs in the temporary instance')
+    parser.add_argument('--idle-details', action='store_true',
+                        help='Trace all handled IRQs, timer callbacks and IPIs during machine_suspend; implies --wake-details')
     args = parser.parse_args()
+    args.wake_details = args.wake_details or args.idle_details
     if not re.fullmatch(r'[a-zA-Z0-9_-]+', args.label) or args.seconds < 1 or args.resume_wait < 0:
         parser.error('Use a simple label, a positive duration, and a nonnegative resume wait')
     if os.geteuid() != 0 or not sys.stdin.isatty():
@@ -122,6 +164,8 @@ def main():
     start_epoch = time.time()
     status = 'setup'
     trace_text = ''
+    idle_triggers = []
+    idle_trace = {'requested': args.idle_details}
     wake_trace = {'requested': args.wake_details, 'enabled_events': [],
                   'unavailable_events': [], 'acpi_event_irqs': []}
     for sig in (signal.SIGINT, signal.SIGTERM):
@@ -129,7 +173,7 @@ def main():
     try:
         instance.mkdir()
         (instance / 'tracing_on').write_text('0')
-        (instance / 'buffer_size_kb').write_text('1024')
+        (instance / 'buffer_size_kb').write_text('8192' if args.idle_details else '1024')
         if 'boot' not in read(instance / 'trace_clock'):
             raise RuntimeError('Boot-time trace clock is unavailable; durations would be misleading')
         (instance / 'trace_clock').write_text('boot')
@@ -141,7 +185,9 @@ def main():
                 r'^\s*(\d+):[^\n]*\bACPI:Event\b', before['interrupts'], re.MULTILINE)})
             wake_trace['acpi_event_irqs'] = irqs
             irq_event = instance / 'events/irq/irq_handler_entry'
-            if irqs and (irq_event / 'filter').is_file():
+            if args.idle_details:
+                pass  # Broad IRQ tracing below replaces the ACPI-only filter.
+            elif irqs and (irq_event / 'filter').is_file():
                 (irq_event / 'filter').write_text(' || '.join(f'irq == {irq}' for irq in irqs))
                 events.append('irq/irq_handler_entry')
             else:
@@ -154,12 +200,17 @@ def main():
                 else:
                     wake_trace['unavailable_events'].append(event)
             (output / 'wake-trace.json').write_text(json.dumps(wake_trace, indent=2)+'\n')
+        if args.idle_details:
+            idle_trace.update(configure_idle_trace(instance, idle_triggers))
+            (output / 'idle-trace.json').write_text(json.dumps(idle_trace, indent=2)+'\n')
         (output / 'before.json').write_text(json.dumps(before, indent=2)+'\n')
         (instance / 'tracing_on').write_text('1')
         status = 'armed'
         print(f'ARMED: {output}', flush=True)
         if args.wake_details:
             print('Wake tracing: '+json.dumps(wake_trace), flush=True)
+        if args.idle_details:
+            print('Idle tracing: '+json.dumps(idle_trace), flush=True)
         print(f'Close the lid for {args.seconds} seconds. Reopen it, wait {args.resume_wait} seconds, then type done and press Enter here.', flush=True)
         print('Use an external timer; these waits are manual. Capture continues across every wake while the lid is closed.', flush=True)
         if args.battery:
@@ -178,6 +229,7 @@ def main():
                 (output / 'trace-stats.txt').write_text(stats)
         finally:
             if instance.exists():
+                remove_idle_triggers(instance, idle_triggers)
                 (instance / 'events/enable').write_text('0')
                 instance.rmdir()
         after = snapshot()
@@ -189,6 +241,7 @@ def main():
         summary['battery_test_requested'] = args.battery
         summary['planned_resume_wait_seconds'] = args.resume_wait
         summary['wake_trace'] = wake_trace
+        summary['idle_trace'] = idle_trace
         summary['battery'] = battery_summary(before, after, summary['machine_suspend_seconds'])
         for name in ('success', 'fail'):
             try:
