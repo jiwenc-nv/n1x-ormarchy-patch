@@ -1,0 +1,94 @@
+{
+  "date": "2026-11-08",
+  "capture": "battery-tabletop-10m-01-20261108-101206-575832",
+  "original_summary": {
+    "status": "finished",
+    "mode": "on",
+    "planned_lid_seconds": 600,
+    "capture_elapsed_seconds": 1304.520199,
+    "machine_suspend_seconds": [
+      1262.498284
+    ],
+    "boot_id": "19f96696-b8fc-4df2-a671-bc9f80c65d1c",
+    "last_wake_irq": "72",
+    "battery_test_requested": true,
+    "planned_resume_wait_seconds": 60,
+    "wake_trace": {
+      "requested": true,
+      "enabled_events": [
+        "power/wakeup_source_activate",
+        "power/wakeup_source_deactivate",
+        "irq/irq_handler_entry"
+      ],
+      "unavailable_events": [],
+      "acpi_event_irqs": [
+        72,
+        141
+      ]
+    },
+    "battery": {
+      "measurement_scope": "Entire capture, including awake and suspend/resume overhead",
+      "power_check_scope": "Endpoints only; keep all external power disconnected throughout",
+      "endpoints_on_battery": true,
+      "battery": "BAT0",
+      "measurement_seconds": 1304.520182,
+      "energy_before_wh": 88.686,
+      "energy_after_wh": 84.45,
+      "energy_full_before_wh": 99.902,
+      "energy_full_after_wh": 99.902,
+      "energy_used_wh": 4.236,
+      "reported_capacity_before_percent": "89",
+      "reported_capacity_after_percent": "85",
+      "machine_suspend_total_seconds": 1262.498284,
+      "outside_machine_suspend_seconds": 42.021898,
+      "machine_suspend_fraction_percent": 96.779,
+      "average_capture_power_w": 11.6898,
+      "energy_loss_percent_of_full": 4.2402,
+      "energy_loss_percent_of_full_per_hour": 11.7013,
+      "notes": []
+    },
+    "success_delta": 1,
+    "fail_delta": 0
+  },
+  "assessment": {
+    "continuous_software_suspend_seconds": 1262.498284,
+    "timekeeping_freeze_entries": 2493,
+    "median_entry_interval_seconds": 0.5076074999997218,
+    "trace_losses": 0,
+    "internal_wakeup_source_activations": 0,
+    "internal_filtered_acpi_irq_entries": 0,
+    "temperature_endpoints_celsius": {
+      "before": [
+        35,
+        38
+      ],
+      "after": [
+        44,
+        48
+      ]
+    },
+    "sample_seconds_after_lid_open": 25.767879
+  },
+  "comparison": {
+    "backpack_capture_average_w": 11.7304,
+    "tabletop_capture_average_w": 11.6898,
+    "interpretation": "Similar reported power and half-second internal freeze/unfreeze activity in both environments, with matching starting thermal readings. Excessive reported power is reproduced on a tabletop; the backpack is not required for this behavior. No driver or interrupt source is identified yet."
+  },
+  "limitations": [
+    "Whole-capture energy includes 42.02 seconds outside machine_suspend; isolated steady-state power was not measured.",
+    "Actual final sample was about 25.8 seconds after lid opening rather than the requested 60 seconds, so gauge settling remains unverified.",
+    "Thermal readings are capture endpoints after resume, not continuous suspend temperatures.",
+    "Only ACPI event IRQs were traced; timers, other IRQs, and IPIs need targeted capture to identify the half-second internal activity.",
+    "Both recent high-power tests share one boot; earlier two-hour low-power measurement was on a different boot."
+  ],
+  "next_step": "Trace IRQ/timer/IPI activity during s2idle and correlate the source with timekeeping unfreeze events; compare the high-power boot with the earlier low-power capture.",
+  "private_evidence_sha256": {
+    "after.json": "c1d23707c8ffef48ad0d0a26c53bcceb4f932183253e3a59947050b2a38660e5",
+    "before.json": "9a9c7d73829a06ac357ee8a98dc4975933c60c901a04877fdfa1be0a7cca9c53",
+    "journal.log": "b6ac0a21d2161e3f8c39e2d1bf3071ca7ca2ec730257402cbac9a868dc495b66",
+    "summary.json": "53ee8053426d05c1f987827ea534dac9cd62eb56c81d602af242dae499811ebe",
+    "trace-stats.txt": "5a2523026eb6cdb9076d03689e47e75d8750399fbf50ee23ea08eba234895fee",
+    "trace.txt": "8563a0c4fbe0a89e9839fed37d1befadfa54efb836d0737f40b52e0e5a6acc8d",
+    "wake-trace.json": "e47971fdd7d0297771747676a59e82671baa40eeea3cb698a48f246aae3a475e"
+  }
+}

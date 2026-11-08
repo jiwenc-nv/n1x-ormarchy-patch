@@ -326,3 +326,14 @@ activations nor the filtered ACPI IRQs appear inside the period; the next
 diagnostic should cover other IRQs, timers, and IPIs. The requested resume
 wait was six seconds and the actual endpoint was about 13.7 seconds after
 lid opening, so battery-gauge settling is still a limitation.
+
+The [tabletop follow-up](results/tabletop-power-2026-11-08.json) reproduced
+the high consumption in the same boot: one 1262.498284-second suspend, 4.236 Wh
+reported loss, and 11.6898 W average across the capture. Starting temperatures
+were again 35/38 degrees C; endpoints were 44/48 degrees C. There were 2,493
+timekeeping freeze entries with a median interval of 0.5076075 seconds and
+no trace losses. The backpack is therefore not required for this behavior.
+The sample was about 25.8 seconds after lid opening, so the requested 60-second
+gauge-settling interval was still not observed. The periodic interrupt source
+remains unidentified; next capture should cover IRQs, timers, and IPIs within
+s2idle rather than only the ACPI event IRQs.
