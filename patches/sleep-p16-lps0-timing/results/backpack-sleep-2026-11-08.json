@@ -1,0 +1,110 @@
+{
+  "date": "2026-11-08",
+  "timezone": "America/Los_Angeles",
+  "assessment": "Linux entered s2idle for most of the backpack trip but resumed three times with the lid closed. User reports the laptop was hot. Low hardware power consumption is not established.",
+  "user_confirmed_trip_matches_lid_interval": true,
+  "kernel": "7.3.0-26-omarchy-p16-sleep1",
+  "p16_lps0_late": "Y",
+  "pm_test": "none",
+  "lid_closed": "2026-11-08T08:46:35.969447-08:00",
+  "lid_opened": "2026-11-08T09:38:48.761866-08:00",
+  "lid_closed_seconds": 3132.792419,
+  "suspend_cycles": [
+    {
+      "start": "2026-11-08T08:46:42.227674-08:00",
+      "end": "2026-11-08T08:57:33.515141-08:00",
+      "suspend_operation_wall_seconds": 651.287467,
+      "approx_timekeeping_suspended_seconds": 645.327081
+    },
+    {
+      "start": "2026-11-08T08:57:58.123113-08:00",
+      "end": "2026-11-08T09:33:29.192831-08:00",
+      "suspend_operation_wall_seconds": 2131.069718,
+      "approx_timekeeping_suspended_seconds": 2125.344155
+    },
+    {
+      "start": "2026-11-08T09:33:54.005207-08:00",
+      "end": "2026-11-08T09:37:19.721762-08:00",
+      "suspend_operation_wall_seconds": 205.716555,
+      "approx_timekeeping_suspended_seconds": 200.086458
+    },
+    {
+      "start": "2026-11-08T09:37:44.777674-08:00",
+      "end": "2026-11-08T09:38:49.370396-08:00",
+      "suspend_operation_wall_seconds": 64.592722,
+      "approx_timekeeping_suspended_seconds": 58.958652
+    }
+  ],
+  "estimated_timekeeping_suspended_seconds": 3029.716346,
+  "timing_method": "For each kernel PM entry/exit pair, subtract the journal CLOCK_MONOTONIC difference from the realtime difference. Approximate software timekeeping suspension, not physical low-power residency; subject to clock corrections and journal timestamp granularity.",
+  "timing_reference": "https://docs.kernel.org/core-api/timekeeping.html",
+  "closed_lid_resume_times": [
+    "2026-11-08T08:57:33.515141-08:00",
+    "2026-11-08T09:33:29.192831-08:00",
+    "2026-11-08T09:37:19.721762-08:00"
+  ],
+  "resuspend_delay_seconds": [
+    24.607972,
+    24.812376,
+    25.055912
+  ],
+  "battery_samples": [
+    {
+      "time": "2026-11-08T08:28:04-08:00",
+      "percent": 99,
+      "state": "charging",
+      "role": "Last saved pre-trip charge reading, not an energy sample at lid closure."
+    },
+    {
+      "time": "2026-11-08T09:33:29-08:00",
+      "percent": 93,
+      "state": "discharging"
+    },
+    {
+      "time": "2026-11-08T09:37:19-08:00",
+      "percent": 92,
+      "state": "discharging"
+    }
+  ],
+  "battery_limit": "Seven percentage points between saved readings, but the endpoints do not bracket the trip and no exact Wh endpoints were captured. Do not report isolated suspend wattage.",
+  "thermal_observation": {
+    "user": "Hot when removed from backpack",
+    "read_at": "2026-11-08T09:40:46-08:00",
+    "acpi_zones_celsius": [
+      43,
+      46
+    ],
+    "limit": "Post-trip readings with AC connected; these do not measure peak temperatures inside the bag."
+  },
+  "wake_cause": "Not established. Current pm_wakeup_irq=72 is the last resume, aligned with lid reopening, and cannot identify the three earlier wake causes.",
+  "notable_logs": [
+    "NVIDIA power-source change status 0x11 at 08:57:32.900936 during the first closed-lid resume; relevant clue, not proof of its cause.",
+    "The known already-free IRQ warning and queueing ieee80211 work while going to suspend occurred earlier this morning.",
+    "This boot has six recorded successful suspend operations and zero recorded failures. These counters do not imply uninterrupted sleep or low hardware power draw.",
+    "No new boot or overnight-style unrecoverable hang occurred during this trip."
+  ],
+  "followup": "Capture wake causes across every resume, exact battery-energy endpoints, and available platform low-power residency. Repeated waking and excess sleep power must be investigated separately. Use shutdown for backpack transport while heat and sleep reliability remain unresolved.",
+  "system_configuration_changes": [],
+  "private_local_evidence": {
+    "battery-history.json": {
+      "sha256": "06105739d77e25efebe02055fba90ee5d29f54207ffdee433779c0c7ee10247a",
+      "bytes": 18023
+    },
+    "cycle-analysis.json": {
+      "sha256": "80d6d78a0cb90c7e79d406478d46afa0796808f0a34bef0671bfda69fb925223",
+      "bytes": 1254
+    },
+    "journal.log": {
+      "sha256": "ed682f812f9abd8193ad99a52d7422f33f1ab763b5efeafe6381db1901f2be55",
+      "bytes": 265442
+    },
+    "kernel-timing.json": {
+      "sha256": "73ca032f12b11abfced2c5e04c71f2a555f19cfc8118a21572818caa8c139a45",
+      "bytes": 3639
+    },
+    "kernel.log": {
+      "sha256": "8dbc3a2683fd99f0542c715a230579b9f5c41749ba372bebb4528ffa43a7a567",
+      "bytes": 67224
+    }
+  }
+}

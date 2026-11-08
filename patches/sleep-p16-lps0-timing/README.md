@@ -291,3 +291,23 @@ accepts explicit `--default original|test|stock` policies; use
 `sudo python check-boot.py --mode on --default test` for the current setup.
 Configuration checks can be tested without root with
 `python tests/test_boot_default.py`.
+
+## Backpack trip, 2026-11-08
+
+The user reported heat after carrying the laptop with the lid closed from
+08:46:35 to 09:38:48 PST (52 minutes 13 seconds). With the same kernel and
+timing option enabled, four s2idle operations completed during that interval.
+Journal clock differences support approximately 50 minutes 30 seconds of
+software timekeeping suspension, but do not establish hardware low-power
+residency. The machine resumed at 08:57, 09:33, and 09:37 with no intervening
+lid-open event, then suspended again about 25 seconds after each resume.
+
+The last saved pre-trip battery reading was 99% at 08:28; it reported 92% at
+09:37. These sparse percentage samples cannot establish isolated sleep power.
+The NVIDIA power-source error recurred during the 08:57 resume; its role is
+unproven. The last wake IRQ belongs to the final lid-open resume and cannot
+identify the earlier wake causes. This trip recovered without a reboot, unlike
+the overnight incident. See the [trip evidence](results/backpack-sleep-2026-11-08.json).
+Next diagnostics should capture each wake cause and actual energy/residency;
+use shutdown for backpack transport while heat and sleep reliability remain
+unresolved.
