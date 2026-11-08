@@ -1,0 +1,120 @@
+{
+  "date": "2026-11-08",
+  "capture": "battery-apps-tabletop-10m-01-20261108-150551-671431",
+  "user_reported_setup": "Several apps open, including Slack; Chrome presence during this capture not separately established.",
+  "original_summary": {
+    "status": "finished",
+    "mode": "on",
+    "planned_lid_seconds": 600,
+    "capture_elapsed_seconds": 979.864579,
+    "machine_suspend_seconds": [
+      900.474162
+    ],
+    "boot_id": "02d747db-4cdf-4142-903d-d3a66de0b4ca",
+    "last_wake_irq": "72",
+    "battery_test_requested": true,
+    "planned_resume_wait_seconds": 60,
+    "auto_finish_on_lid_cycle": true,
+    "wake_trace": {
+      "requested": true,
+      "enabled_events": [
+        "power/wakeup_source_activate",
+        "power/wakeup_source_deactivate"
+      ],
+      "unavailable_events": [],
+      "acpi_event_irqs": [
+        72,
+        141
+      ]
+    },
+    "idle_trace": {
+      "requested": true,
+      "scope": "machine_suspend begin through first subsequent device PM callback",
+      "enabled_events": [
+        "irq/irq_handler_entry",
+        "irq/softirq_entry",
+        "timer/timer_expire_entry",
+        "timer/hrtimer_expire_entry",
+        "timer/timer_start",
+        "timer/hrtimer_start",
+        "ipi/ipi_entry",
+        "ipi/ipi_raise"
+      ],
+      "unavailable_events": []
+    },
+    "battery": {
+      "measurement_scope": "Entire capture, including awake and suspend/resume overhead",
+      "power_check_scope": "Endpoints only; keep all external power disconnected throughout",
+      "endpoints_on_battery": true,
+      "battery": "BAT0",
+      "measurement_seconds": 979.864561,
+      "energy_before_wh": 69.88,
+      "energy_after_wh": 69.19,
+      "energy_full_before_wh": 99.902,
+      "energy_full_after_wh": 99.902,
+      "energy_used_wh": 0.69,
+      "reported_capacity_before_percent": "70",
+      "reported_capacity_after_percent": "69",
+      "machine_suspend_total_seconds": 900.474162,
+      "outside_machine_suspend_seconds": 79.390399,
+      "machine_suspend_fraction_percent": 91.898,
+      "average_capture_power_w": 2.535,
+      "energy_loss_percent_of_full": 0.6907,
+      "energy_loss_percent_of_full_per_hour": 2.5375,
+      "notes": []
+    },
+    "success_delta": 1,
+    "fail_delta": 0
+  },
+  "assessment": "Third successful sleep in the fresh boot. Opening the reported apps did not reproduce the half-second idle-exit loop or the earlier approximately 11.7 W capture power.",
+  "freeze_events": [
+    [
+      14661.932724,
+      "suspend_resume",
+      "timekeeping_freeze[11] begin"
+    ],
+    [
+      15562.404132,
+      "suspend_resume",
+      "timekeeping_freeze[11] end"
+    ],
+    [
+      15562.404236,
+      "suspend_resume",
+      "timekeeping_freeze[11] begin"
+    ],
+    [
+      15562.404727,
+      "suspend_resume",
+      "timekeeping_freeze[0] end"
+    ]
+  ],
+  "central_trace_events_excluding_ten_seconds_at_each_end": 0,
+  "trace_losses": 0,
+  "thermal_endpoints_celsius": {
+    "before": [
+      42,
+      45
+    ],
+    "after": [
+      35,
+      38
+    ]
+  },
+  "limitations": [
+    "Apps were reported by user; a process inventory at suspend entry was not recorded. Chrome was not specifically confirmed in this run.",
+    "2.535 W is whole-capture power, including 79.39 seconds outside suspend, and not directly comparable to the long run\u2019s isolated sleep power (also not measured).",
+    "One successful apps-open capture does not exclude a particular workload or device transition triggering a later driver/firmware problem."
+  ],
+  "interpretation": "Simply having the tested apps open is not sufficient to reproduce the observed failure. Root cause of the prior high-power state remains unresolved.",
+  "private_evidence_sha256": {
+    "after.json": "e1ee6a4479ea9dfb580637d7184d792662fbfefa19e59a2eadaf2db8ab8826cd",
+    "before.json": "a8478e2d4a584a1b58079dfa10afe8d37b5a713b60dd523e25b5eb81bac98f47",
+    "idle-trace.json": "f6a0a136776ecc3225580f48f31267435b042f47599a25cc1355ca6b6cc8fc2d",
+    "journal.log": "ee51bffdec1b4f9898fcaa6fecc3937b4b43f863552cbd28d64dd57af859567f",
+    "summary.json": "08e7a87fdcfc9fc178cca4101d6a3711be851939715aa9f204e70f27cf35166c",
+    "trace-stats.txt": "b663ec70ffb69871d8821123840c5c0c1ae266e4e6f039bc8168b615c2b75ac6",
+    "trace.txt": "6b0f33df8f0950c9a215f3e11c3ba51a30016fff7bd70eb77b5b50c62e45c96f",
+    "wake-trace.json": "21a80433427f44ef220bb887ccd37a3ed9245951f85efb5068ce811ff4b1a5ac"
+  }
+}
