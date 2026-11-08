@@ -290,6 +290,31 @@ to the session and recovered in a fresh boot. See the
 supervised failure diagnosis before extending the endurance tests below;
 earlier successful captures do not establish overnight reliability.
 
+For a short supervised follow-up after the backpack incident, let the laptop
+cool, disconnect AC and all peripherals while awake, and run:
+
+```bash
+sudo python capture-sleep.py --mode on --battery --wake-details --label battery-backpack-10m-01 --seconds 600 --resume-wait 60
+```
+
+After `ARMED`, close the lid and reproduce the backpack setup for ten minutes,
+keeping the bag nearby and ending the test early if it becomes hot. Use an
+external timer. Reopen, wait a full 60 seconds with power still disconnected,
+then type `done`. This is a supervised diagnostic, not validation for unattended
+transport. The script does not suspend the machine or set an automatic wake.
+
+`--wake-details` adds wake-source activation/deactivation and filtered ACPI
+event IRQ tracing to the existing temporary trace instance. IRQ numbers are
+discovered from this boot's interrupt table. Supported/missing events are
+reported at arming and saved in `wake-trace.json`; every captured wake remains
+in `trace.txt`, subject to the recorded buffer-overrun counters. ACPI uses a
+shared interrupt, so its IRQ alone does not identify the firmware event.
+Thermal readings are captured at the endpoints, not continuously inside the
+bag. No periodic polling or persistent system configuration is added, and an
+unclean reboot still loses the in-memory trace. These events and the battery
+energy endpoints help investigate waking and power draw separately; software
+suspend duration alone does not prove low hardware power consumption.
+
 Start with **30 minutes**. If suspend/resume works and the drain is reasonable,
 repeat for **two hours** to reduce the relative effect of gauge rounding and
 the short awake periods at the start/end. The first 30-minute test is now

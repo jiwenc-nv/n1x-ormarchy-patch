@@ -55,6 +55,10 @@ def snapshot():
         'suspend_stats': {p.name: read(p) for p in sorted(stats.iterdir()) if p.is_file()},
         'interrupts': read('/proc/interrupts'),
         'wakeup_sources': read('/sys/kernel/debug/wakeup_sources'),
+        'thermal_zones': {
+            p.name: {'type': read(p / 'type'), 'temp_millicelsius': read(p / 'temp')}
+            for p in sorted(Path('/sys/class/thermal').glob('thermal_zone*'))
+        },
         'power_supply': power_supply, 'power_supply_boottime_seconds': power_time,
         'loaded_modules': {name: read(f'/sys/module/{name}/srcversion')
                            for name in ('nvidia', 'nvidia_drm', 'mt7925e')},
@@ -81,6 +85,8 @@ def main():
                         help='Require external power disconnected and a discharging system battery before arming')
     parser.add_argument('--resume-wait', type=int, default=10,
                         help='Manual wait after reopening before typing done, in seconds (default: 10)')
+    parser.add_argument('--wake-details', action='store_true',
+                        help='Also trace wake-source activity and ACPI event IRQs in the temporary instance')
     args = parser.parse_args()
     if not re.fullmatch(r'[a-zA-Z0-9_-]+', args.label) or args.seconds < 1 or args.resume_wait < 0:
         parser.error('Use a simple label, a positive duration, and a nonnegative resume wait')
@@ -116,6 +122,8 @@ def main():
     start_epoch = time.time()
     status = 'setup'
     trace_text = ''
+    wake_trace = {'requested': args.wake_details, 'enabled_events': [],
+                  'unavailable_events': [], 'acpi_event_irqs': []}
     for sig in (signal.SIGINT, signal.SIGTERM):
         signal.signal(sig, interrupted)
     try:
@@ -126,10 +134,32 @@ def main():
             raise RuntimeError('Boot-time trace clock is unavailable; durations would be misleading')
         (instance / 'trace_clock').write_text('boot')
         (instance / 'events/power/suspend_resume/enable').write_text('1')
+        if args.wake_details:
+            events = ['power/wakeup_source_activate', 'power/wakeup_source_deactivate']
+            # Discover this boot's IRQ assignment; never assume IRQ 72 is stable.
+            irqs = sorted({int(m[1]) for m in re.finditer(
+                r'^\s*(\d+):[^\n]*\bACPI:Event\b', before['interrupts'], re.MULTILINE)})
+            wake_trace['acpi_event_irqs'] = irqs
+            irq_event = instance / 'events/irq/irq_handler_entry'
+            if irqs and (irq_event / 'filter').is_file():
+                (irq_event / 'filter').write_text(' || '.join(f'irq == {irq}' for irq in irqs))
+                events.append('irq/irq_handler_entry')
+            else:
+                wake_trace['unavailable_events'].append('irq/irq_handler_entry (ACPI event IRQ filter unavailable)')
+            for event in events:
+                enable = instance / 'events' / event / 'enable'
+                if enable.is_file():
+                    enable.write_text('1')
+                    wake_trace['enabled_events'].append(event)
+                else:
+                    wake_trace['unavailable_events'].append(event)
+            (output / 'wake-trace.json').write_text(json.dumps(wake_trace, indent=2)+'\n')
         (output / 'before.json').write_text(json.dumps(before, indent=2)+'\n')
         (instance / 'tracing_on').write_text('1')
         status = 'armed'
         print(f'ARMED: {output}', flush=True)
+        if args.wake_details:
+            print('Wake tracing: '+json.dumps(wake_trace), flush=True)
         print(f'Close the lid for {args.seconds} seconds. Reopen it, wait {args.resume_wait} seconds, then type done and press Enter here.', flush=True)
         print('Use an external timer; these waits are manual. Capture continues across every wake while the lid is closed.', flush=True)
         if args.battery:
@@ -158,6 +188,7 @@ def main():
                    'boot_id': before['boot_id'], 'last_wake_irq': after['wake_irq']}
         summary['battery_test_requested'] = args.battery
         summary['planned_resume_wait_seconds'] = args.resume_wait
+        summary['wake_trace'] = wake_trace
         summary['battery'] = battery_summary(before, after, summary['machine_suspend_seconds'])
         for name in ('success', 'fail'):
             try:
