@@ -7,17 +7,19 @@ Three enabled AC-powered lid tests completed continuous sleeps, including an
 18-minute-52-second run, after two off-mode baselines repeatedly woke within
 1.6–3 seconds. This supports the timing fix for the observed premature wakes;
 subsequent 30-minute and two-hour battery tests also resumed successfully.
-The two-hour run measured about 1.45 W across the capture. Long-term reliability
-and full-battery sleep endurance remain unverified.
+The two-hour run measured about 1.45 W across the capture. An unplugged overnight
+attempt on November 7–8 subsequently failed to return to the session and ended
+in a fresh boot. The cause remains unresolved; overnight reliability is not
+established. See the [incident evidence](results/overnight-failure-2026-11-08.json).
 
 Use [TESTING.md](TESTING.md) for the installation commands, reboot checkpoints,
 off/on lid tests and recovery steps. The helper scripts only change system
 state when you explicitly run the documented installation/rebuild/default commands;
 the capture script uses a temporary trace instance during each manual test.
 Start with [REPRODUCING.md](REPRODUCING.md) when building from a fresh checkout.
-For the next unplugged runtime check, [TESTING.md, phase F](TESTING.md#f-measure-battery-drain-with-the-lid-closed)
-uses `capture-sleep.py --battery` to record energy loss, elapsed time, and
-suspend coverage over a 30-minute lid test, followed by a longer test if useful.
+[TESTING.md, phase F](TESTING.md#f-measure-battery-drain-with-the-lid-closed)
+documents battery measurements. After the overnight failure, prioritize
+supervised failure diagnosis before extending battery endurance tests.
 
 ## Exact baseline
 
@@ -236,6 +238,49 @@ no recorded suspend failures or trace losses. Energy fell from 97.126 to
 lid opening, so the requested 60-second settling wait was not observed.
 The known SDHCI/PCIe IRQ warning recurred; GPU and network checks passed.
 Longer battery operation and long-term reliability remain unverified.
+
+## Overnight failure, 2026-11-08
+
+The next overnight attempt did not return to the session. The user reports
+that AC and all peripherals were disconnected, lid/keyboard/power-button wake
+attempts did not respond, and connecting AC was followed by a fresh boot.
+Whether a long power-button press forced shutdown during recovery is unknown.
+The failed boot and the recovery boot both used the test kernel with the
+timing option enabled.
+
+The saved journals establish this timeline (America/Los_Angeles, PST):
+
+| Time | Evidence |
+| --- | --- |
+| Nov 7, 22:13:57 | The lock helper timed out waiting for a secure lock and issued the screen-lock warning. This suspend subsequently resumed at 22:14:45. |
+| 22:22:38 | A `systemctl` client requested suspend. The screen locked securely, and the system resumed at 22:23:39. |
+| 22:23:59–22:24:00 | Final lid close; the shell reported `secure=true` before systemd began suspend. The journal ends at `Performing sleep operation 'suspend'...`. |
+| Nov 8, 08:03 | A new boot ID appears; journald reports unclean journal files. No successful overnight resume or orderly shutdown is recorded. |
+
+The earlier lock timeout is a real separate problem, but it does not establish
+the cause of the final failure: locking succeeded on that attempt. Missing
+final kernel messages do not prove the hang occurred before kernel suspend
+entry; messages can be lost during an unclean shutdown. No panic/oops is saved
+for this incident. Both pstore directories are empty, and EFI pstore is disabled
+by the running configuration, so the absence of a crash report is inconclusive.
+
+NVIDIA logged power-source error `0x11` (`NV_ERR_GPU_NOT_FULL_POWER`) during two
+resumes that completed, including the one before the final attempt. The known
+SDHCI/PCIe already-free IRQ warning also recurred on successful resumes. These
+are investigation leads, not proven causes. The earlier graphics NULL
+dereference was not found in this boot's saved journal.
+
+UPower's last saved charge reading was 100% at 21:49:04; the first morning
+reading was 91% at 08:03:33, already charging. This contradicts an inference of
+zero loss, but the samples do not bracket the final suspend. Neither actual
+overnight sleep duration nor isolated sleep power can be calculated. The
+previous 68.7-hour extrapolation remains a consumption estimate from one
+successful test, not evidence that the laptop can reliably sleep that long.
+
+The [sanitized incident record](results/overnight-failure-2026-11-08.json)
+archives selected events, evidence hashes, limitations, and the next diagnostic
+steps. Raw logs remain in ignored `validation/overnight-20261108/`. No kernel,
+boot, power-management, or lock configuration was changed during this review.
 
 `set-default.py test` makes this boot selection reproducible, and
 `set-default.py stock` selects the original kernel as the persistent default.

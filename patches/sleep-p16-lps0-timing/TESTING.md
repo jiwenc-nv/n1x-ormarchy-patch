@@ -284,6 +284,12 @@ still takes precedence for a single boot.
 
 ## F. Measure battery drain with the lid closed
 
+**Status, 2026-11-08:** The later unplugged overnight attempt failed to return
+to the session and recovered in a fresh boot. See the
+[incident evidence](results/overnight-failure-2026-11-08.json). Prioritize short,
+supervised failure diagnosis before extending the endurance tests below;
+earlier successful captures do not establish overnight reliability.
+
 Start with **30 minutes**. If suspend/resume works and the drain is reasonable,
 repeat for **two hours** to reduce the relative effect of gauge rounding and
 the short awake periods at the start/end. The first 30-minute test is now

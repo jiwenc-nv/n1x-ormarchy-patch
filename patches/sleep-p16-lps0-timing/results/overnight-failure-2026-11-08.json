@@ -1,0 +1,159 @@
+{
+  "date": "2026-11-08",
+  "timezone": "America/Los_Angeles",
+  "assessment": "Overnight failure to return to the session; recovered in a new boot after AC reconnection. Root cause unresolved.",
+  "hardware": {
+    "model": "ASUS ProArt P16 H7607BA",
+    "bios": "H7607BA.304.L38",
+    "kernel": "7.3.0-26-omarchy-p16-sleep1",
+    "nvidia_version": "615.78.08",
+    "mem_sleep": "s2idle",
+    "p16_lps0_late_enabled_in_failed_and_recovery_boots": true
+  },
+  "user_observations": {
+    "ac_and_all_peripherals_disconnected_for_final_attempt": true,
+    "morning_lid_keyboard_and_power_button_did_not_restore_session": true,
+    "ac_reconnection_followed_by_boot": true,
+    "reported_morning_battery_percent": 91,
+    "power_button_long_press_during_recovery": "Unknown; user is not sure."
+  },
+  "selected_previous_boot_journal_events": [
+    {
+      "time": "2026-11-07T22:13:57.013713-08:00",
+      "message": "omarchy-system-sleep-monitor[238866]: omarchy-system-sleep-lock: suspending without a secure lock (the shell did not secure the session within 12000ms)"
+    },
+    {
+      "time": "2026-11-07T22:13:58.042918-08:00",
+      "message": "kernel: PM: suspend entry (s2idle)"
+    },
+    {
+      "time": "2026-11-07T22:14:45.124774-08:00",
+      "message": "kernel: PM: suspend exit"
+    },
+    {
+      "time": "2026-11-07T22:22:38.910384-08:00",
+      "message": "systemd-logind[1103]: suspend requested from client PID 253933 ('systemctl') (unit user@1000.service)..."
+    },
+    {
+      "time": "2026-11-07T22:22:39.733171-08:00",
+      "message": "kernel: PM: suspend entry (s2idle)"
+    },
+    {
+      "time": "2026-11-07T22:23:39.198855-08:00",
+      "message": "kernel: PM: suspend exit"
+    },
+    {
+      "time": "2026-11-07T22:24:00.591947-08:00",
+      "message": "omarchy-shell[1843]:  DEBUG qml: omarchy lock 2026-11-08T06:24:00.591Z secure=true"
+    },
+    {
+      "time": "2026-11-07T22:24:00.653628-08:00",
+      "message": "systemd-sleep[257597]: Performing sleep operation 'suspend'..."
+    }
+  ],
+  "timeline_assessment": [
+    {
+      "time": "2026-11-07T22:13:57-08:00",
+      "event": "Lock helper timeout; generated the screen-did-not-lock warning. This sleep resumed at 22:14:45."
+    },
+    {
+      "time": "2026-11-07T22:22:38-08:00",
+      "event": "systemctl client requested suspend; secure lock and resume at 22:23:39 followed. Cannot distinguish typed command from a menu invoking systemctl."
+    },
+    {
+      "time": "2026-11-07T22:23:59-08:00",
+      "event": "Final lid close; secure lock at 22:24:00.591 preceded systemd suspend at 22:24:00.653."
+    },
+    {
+      "time": "2026-11-08T08:03:28-08:00",
+      "event": "First journal records of a new boot; system and user journals reported corrupted or uncleanly shut down. No prior orderly shutdown or successful overnight resume is recorded."
+    }
+  ],
+  "battery_history": {
+    "source": "UPower Device.GetHistory, charge, 43200-second window, resolution 1000; raw response converted to local timestamps in ignored validation evidence.",
+    "last_saved_previous_evening_charge": {
+      "time": "2026-11-07T21:49:04-08:00",
+      "percent": 100
+    },
+    "first_morning_charge": {
+      "time": "2026-11-08T08:03:33-08:00",
+      "percent": 91,
+      "state": "charging"
+    },
+    "difference_percentage_points": 9,
+    "interpretation": "Not evidence of zero loss. These are not final-suspend energy endpoints; do not calculate isolated sleep power or actual overnight sleep duration from them.",
+    "history_gap": "Last saved prior-boot rate sample is 22:17:45, before final suspend at 22:24. UPower history is incomplete across the unclean shutdown.",
+    "zero_unknown_sample": "A synthetic/unknown-state zero sample at morning startup is not an empty battery measurement."
+  },
+  "diagnostic_findings": {
+    "nvidia_power_source_error": {
+      "status": "0x11",
+      "symbol": "NV_ERR_GPU_NOT_FULL_POWER",
+      "times": [
+        "2026-11-07T20:37:49.981175-08:00",
+        "2026-11-07T22:23:38.605828-08:00"
+      ],
+      "interpretation": "Both associated resumes completed. Relevant to power transitions but not proof of overnight cause.",
+      "local_source": "/usr/src/nvidia-615.78.08/src/common/sdk/nvidia/inc/nvstatuscodes.h:46"
+    },
+    "already_free_irq_warnings": 5,
+    "already_free_irq_interpretation": "Known SDHCI/PCIe hotplug warning, also observed on the original kernel and successful resumes; final successful resume warning names IRQ 364.",
+    "saved_fatal_signature_matches": [],
+    "pstore_sysfs_files": [],
+    "pstore_systemd_archive_files": [],
+    "efi_pstore_disable_parameter": "Y",
+    "reset_related_efi_variable_names": [],
+    "persistent_crash_capture_limit": "EFI crash storage is disabled; empty pstore does not rule out a kernel crash. It also cannot prove or disprove a firmware hang.",
+    "last_operation": "suspend, not suspend-then-hibernate",
+    "last_durable_record_limit": "The journal ends at systemd-sleep Performing sleep operation. Missing later messages do not establish that execution stopped at that exact point."
+  },
+  "hypotheses_not_confirmed": [
+    "Platform/EC/firmware wake or power-state failure, suggested by the reported lack of response until AC was reconnected.",
+    "Kernel/driver suspend or resume failure, including graphics or platform transitions.",
+    "A recovery long-press may explain the eventual unclean shutdown; its occurrence and timing are unknown."
+  ],
+  "next_diagnostic_steps": [
+    "Preserve evidence and treat overnight reliability as unresolved. Do not interpret the earlier two-hour energy extrapolation as validated endurance.",
+    "Prepare failure-oriented capture before a supervised repeat: detailed PM phase messages and durable pre/post markers; assess an available persistent crash backend. An in-RAM trace alone is lost on reset, and pstore only captures supported crash paths, not every hang.",
+    "Use short battery tests with AC/peripherals removed while awake and the exact removal timing recorded; repeat the sleep/wake sequence to check state retained across cycles before another overnight run.",
+    "If reproducible, use staged freezer/devices/platform pm_test checks to isolate driver transitions from actual s2idle entry. The installed source supports these s2idle stages and rejects processors/core. Restore none after each diagnostic sequence. Tests require saved work and supervision and were not run during this review.",
+    "On recurrence, record indicators and short-button response, and try AC reconnection before any long power-button hold. Establish whether the original session resumes or a fresh boot starts."
+  ],
+  "external_context": [
+    {
+      "url": "https://github.com/omacom/omarchy/issues/12129",
+      "relevance": "Other NVIDIA laptops report AC-transition resume failures with the same status code. Different architecture, hardware, and driver version; not a demonstrated match or a verified fix for this P16."
+    },
+    {
+      "url": "https://www.kernel.org/doc/html/latest/power/basic-pm-debugging.html",
+      "relevance": "Upstream staged suspend diagnostic methodology; supplement with this exact ARM64 kernel source for supported s2idle test levels."
+    }
+  ],
+  "system_configuration_changes_during_review": [],
+  "private_local_evidence": {
+    "battery-history-dbus.json": {
+      "sha256": "0d255b43727e3cc88ac37db836b6505279d6b943176f9148268ce13f79c17393",
+      "bytes": 30140
+    },
+    "current-boot-kernel.log": {
+      "sha256": "975c43c943d7b1063f4ccc03a0ed38c77f2b794f1b6a10ba57c7d1e8e87a4583",
+      "bytes": 174746
+    },
+    "current-boot-recovery.log": {
+      "sha256": "9464f6266f17e870502ec1dd71852f58868ab31a6c295eae2252597d811a9545",
+      "bytes": 2415
+    },
+    "previous-boot-journal.log": {
+      "sha256": "71b85ff80c91bb7f94c6a2b9dce5e137c0423a1edd7dc663a7843f92686a8970",
+      "bytes": 2577838
+    },
+    "previous-boot-kernel.log": {
+      "sha256": "cd8189af360fbbf92008d7b3be2c6c8c8bd2566c9cd51ba1823aa8774184b75e",
+      "bytes": 1653264
+    },
+    "protected-evidence.json": {
+      "sha256": "e7314f2562433c5c103a7fefb677d08a96172116fff9db77c56b128e1dcf87ec",
+      "bytes": 224
+    }
+  }
+}
