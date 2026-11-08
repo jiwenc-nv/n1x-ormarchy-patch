@@ -6,8 +6,10 @@ is complete: the test kernel is running with parameter `Y`. `on-01` and
 `on-02` recorded single continuous sleeps of 121.394864 and 118.451021 seconds,
 ending at lid reopening. `on-long` then completed a single 1131.942415-second
 sleep. All three enabled captures have zero recorded suspend failures and no
-kernel oops. The planned AC sequence is complete; battery behavior and
-long-term reliability remain unverified. The graphics driver has not been
+kernel oops. The planned AC sequence is complete. The first 30-minute battery
+test also resumed successfully, but unchanged energy readings leave battery
+drain unresolved. Longer battery operation and long-term reliability remain
+unverified. The graphics driver has not been
 changed. Results and the persistent SDHCI resume warning are summarized in
 `results/sleep-comparison-2026-11-07.json` and [README.md](README.md#runtime-results-2026-11-07).
 
@@ -19,7 +21,7 @@ default change did not require a reboot. A subsequent normal reboot confirmed
 Use phase E to verify or reproduce the default setting. Phases A–D below are
 the original installation and test sequence; do not restart them on this
 already-configured machine.
-The next runtime check is the unplugged battery-drain test in phase F.
+The next runtime check is the two-hour unplugged battery-drain test in phase F.
 
 `off-03` ended before the lid test and is invalid. `off-03-retry` encountered
 a graphics kernel NULL dereference with the timing experiment disabled and
@@ -281,7 +283,12 @@ still takes precedence for a single boot.
 
 Start with **30 minutes**. If suspend/resume works and the drain is reasonable,
 repeat for **two hours** to reduce the relative effect of gauge rounding and
-the short awake periods at the start/end. There is no battery result yet.
+the short awake periods at the start/end. The first 30-minute test is now
+complete: 1817.864748 seconds of continuous sleep and a successful resume,
+but both energy readings were 98.891 Wh. Follow-up awake readings changed
+in 0.016–0.032 Wh steps. This is not merely whole-percentage rounding, but
+the sleep drain is still unresolved. The result and caveats are archived in
+`results/battery-30m-2026-11-07.json`.
 
 1. Save your work. Disconnect the charger and any USB-C source that supplies
    power; keep the other peripherals and power settings unchanged. If starting
@@ -324,18 +331,25 @@ throughout. No periodic polling, wake timer, or system sleep hook is added.
 
 One continuous sleep covering most of the 30 minutes is expected. Multiple
 short periods would reproduce the premature-wake symptom. A zero energy
-delta does not prove zero drain; the gauge may need a longer interval to show
-the loss. If it reports increasing energy or external power at either end,
+delta does not prove zero drain; the gauge may need a longer interval or time
+to settle after resume. The updated report leaves rates `null` in this case.
+If it reports increasing energy or external power at either end,
 the script withholds the discharge-rate calculation. Review the saved summary
 and trace before extending the duration.
 
 For a follow-up two-hour test after reviewing the first result:
 
 ```bash
-sudo python capture-sleep.py --mode on --battery --label battery-2h-01 --seconds 7200
+sudo python capture-sleep.py --mode on --battery --label battery-2h-01 --seconds 7200 --resume-wait 60
 ```
 
-Use the same unplugged setup and manual finish procedure. Battery measurement
+Use the same unplugged setup, but wait **60 seconds after reopening** before
+typing `done`, keeping the charger disconnected. `--resume-wait` only changes
+the instructions and records the planned manual wait; it does not automate
+timing or wake the system. This extra awake time is included in the energy
+measurement and suspend-coverage report. If two hours still produces an
+unchanged gauge reading, investigate firmware energy accounting before using
+it to infer battery life. Battery measurement
 checks can be run without arming a capture:
 
 ```bash

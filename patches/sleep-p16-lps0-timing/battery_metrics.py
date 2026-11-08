@@ -81,14 +81,18 @@ def battery_summary(before, after, sleep_periods):
         notes = []
         if used < 0:
             notes.append('Gauge energy increased; no discharge rate calculated. Check charging or gauge recalibration.')
+        elif used == 0:
+            result.update(average_capture_power_w=None,
+                          energy_loss_percent_of_full=0.0,
+                          energy_loss_percent_of_full_per_hour=None)
+            notes.append('No reported energy change; discharge rate is unresolved, not zero. '
+                         'Allow the gauge to settle after resume and consider a longer test.')
         else:
             result.update(
                 average_capture_power_w=round(used * 3600 / elapsed, 4),
                 energy_loss_percent_of_full=round(100 * used / full_before, 4),
                 energy_loss_percent_of_full_per_hour=round(100 * used / full_before * 3600 / elapsed, 4),
             )
-            if used == 0:
-                notes.append('No reported energy change; this does not establish zero drain. A longer test may resolve it.')
         if full_before != full_after:
             notes.append('Reported full capacity changed; percentage loss uses the starting full capacity.')
         if first.get('POWER_SUPPLY_CAPACITY') == '100':

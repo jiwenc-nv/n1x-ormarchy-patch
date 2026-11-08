@@ -149,8 +149,10 @@ their runtime. For the independent repository manager tests, run
 `results/` retains the original build hashes and audit, the five valid AC lid
 tests, the reboot confirmation, and the fresh-checkout reproduction check.
 The two off-mode tests repeatedly woke after about 1.6–3 seconds; the three
-on-mode tests each slept continuously, including 1131.942415 seconds. Battery
-operation and long-term reliability remain unverified. The invalid early
+on-mode tests each slept continuously, including 1131.942415 seconds. The later
+battery run slept for 1817.864748 seconds and resumed successfully, but its
+unchanged energy readings leave drain unresolved. Longer battery operation
+and long-term reliability remain unverified. The invalid early
 capture and deferred off-mode graphics crash are described in the runbook.
 
 Large downloaded sources, compiled artifacts, module-signing keys, raw

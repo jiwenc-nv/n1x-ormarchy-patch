@@ -1,0 +1,95 @@
+{
+  "date": "2026-11-07",
+  "capture": "battery-30m-01-20261107-155510-325249",
+  "original_summary": {
+    "status": "finished",
+    "mode": "on",
+    "planned_lid_seconds": 1800,
+    "capture_elapsed_seconds": 1849.567013,
+    "machine_suspend_seconds": [
+      1817.864748
+    ],
+    "last_wake_irq": "72",
+    "battery_test_requested": true,
+    "battery": {
+      "measurement_scope": "Entire capture, including awake and suspend/resume overhead",
+      "power_check_scope": "Endpoints only; keep all external power disconnected throughout",
+      "endpoints_on_battery": true,
+      "battery": "BAT0",
+      "measurement_seconds": 1849.567,
+      "energy_before_wh": 98.891,
+      "energy_after_wh": 98.891,
+      "energy_full_before_wh": 99.902,
+      "energy_full_after_wh": 99.902,
+      "energy_used_wh": 0.0,
+      "reported_capacity_before_percent": "99",
+      "reported_capacity_after_percent": "99",
+      "machine_suspend_total_seconds": 1817.864748,
+      "outside_machine_suspend_seconds": 31.702252,
+      "machine_suspend_fraction_percent": 98.286,
+      "average_capture_power_w": 0.0,
+      "energy_loss_percent_of_full": 0.0,
+      "energy_loss_percent_of_full_per_hour": 0.0,
+      "notes": [
+        "No reported energy change; this does not establish zero drain. A longer test may resolve it."
+      ]
+    },
+    "success_delta": 1,
+    "fail_delta": 0
+  },
+  "reassessed_battery_metrics": {
+    "measurement_scope": "Entire capture, including awake and suspend/resume overhead",
+    "power_check_scope": "Endpoints only; keep all external power disconnected throughout",
+    "endpoints_on_battery": true,
+    "battery": "BAT0",
+    "measurement_seconds": 1849.567,
+    "energy_before_wh": 98.891,
+    "energy_after_wh": 98.891,
+    "energy_full_before_wh": 99.902,
+    "energy_full_after_wh": 99.902,
+    "energy_used_wh": 0.0,
+    "reported_capacity_before_percent": "99",
+    "reported_capacity_after_percent": "99",
+    "machine_suspend_total_seconds": 1817.864748,
+    "outside_machine_suspend_seconds": 31.702252,
+    "machine_suspend_fraction_percent": 98.286,
+    "average_capture_power_w": null,
+    "energy_loss_percent_of_full": 0.0,
+    "energy_loss_percent_of_full_per_hour": null,
+    "notes": [
+      "No reported energy change; discharge rate is unresolved, not zero. Allow the gauge to settle after resume and consider a longer test."
+    ]
+  },
+  "assessment": {
+    "battery_suspend_resume": "passed for this run",
+    "sleep_seconds": 1817.864748,
+    "recorded_suspend_failures": 0,
+    "trace_event_losses": 0,
+    "kernel_oops_or_warning_in_capture": false,
+    "drain_rate": "unresolved: identical endpoint energy readings; do not interpret the original 0.0 W as zero drain"
+  },
+  "awake_gauge_check": {
+    "start_time": "2026-11-07T16:26:53.414637-08:00",
+    "end_time": "2026-11-07T16:27:43.499572-08:00",
+    "energy_before_wh": 98.666,
+    "energy_after_wh": 98.442,
+    "samples": 11,
+    "observed_successive_energy_steps_wh": [
+      0.016,
+      0.032
+    ],
+    "note": "Gauge changes while awake. This does not establish that firmware accounts for energy used during suspend."
+  },
+  "driver_check": {
+    "source": "drivers/acpi/battery.c in the pinned test-kernel source",
+    "cache_time_ms": 1000,
+    "resume_invalidates_cache": true,
+    "note": "No driver or cache setting was changed."
+  },
+  "next_test": {
+    "label": "battery-2h-01",
+    "planned_lid_seconds": 7200,
+    "manual_resume_wait_seconds": 60,
+    "power": "unplugged throughout"
+  }
+}

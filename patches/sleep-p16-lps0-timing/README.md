@@ -6,7 +6,8 @@ ASUS ProArt P16 H7607BA, BIOS `H7607BA.304.L38`. This is a **whole-kernel build*
 Three enabled AC-powered lid tests completed continuous sleeps, including an
 18-minute-52-second run, after two off-mode baselines repeatedly woke within
 1.6–3 seconds. This supports the timing fix for the observed premature wakes;
-battery behavior and long-term reliability remain unverified.
+a subsequent 30-minute battery test also resumed successfully. Battery drain
+and long-term reliability remain unverified.
 
 Use [TESTING.md](TESTING.md) for the installation commands, reboot checkpoints,
 off/on lid tests and recovery steps. The helper scripts only change system
@@ -208,14 +209,23 @@ was recorded in the three enabled runs. A pre-existing SDHCI/PCIe hotplug
 `already-free IRQ` warning recurred on the long-test resume; it also appeared
 on the original kernel and is not fixed by this timing patch.
 
-This completes the planned AC test sequence. All enabled tests share one boot;
-battery operation, behavior across further boots, and long-term reliability
-remain unverified. An earlier original-kernel trace also slept for about 108
+This completes the planned AC test sequence. Those three enabled AC tests share
+one boot. An earlier original-kernel trace also slept for about 108
 seconds, so these results support the candidate without conclusively proving
 causality. Detailed local captures remain under the git-ignored `validation/`
 directory. The compact comparison and original build evidence are archived
 under [results/](results/). The original kernel remains available as the
 recovery entry.
+
+The subsequent battery test, after another boot, recorded one 1817.864748-second
+sleep with one successful suspend and no recorded suspend failures. Both
+energy endpoints reported 98.891 Wh, so battery drain is **unresolved**, not
+zero. Awake follow-up readings decreased in 0.016–0.032 Wh steps, showing the
+gauge updates while awake; this does not prove it accounts correctly for sleep
+energy. See [the battery result](results/battery-30m-2026-11-07.json). The next
+test is two hours unplugged with a 60-second manual wait after reopening to
+allow gauge settling. Longer battery operation and long-term reliability
+remain unverified.
 
 `set-default.py test` makes this boot selection reproducible, and
 `set-default.py stock` selects the original kernel as the persistent default.

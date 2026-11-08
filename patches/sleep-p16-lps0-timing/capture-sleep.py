@@ -79,9 +79,11 @@ def main():
                         help='Planned closed-lid duration; this script does not set a wake timer')
     parser.add_argument('--battery', action='store_true',
                         help='Require external power disconnected and a discharging system battery before arming')
+    parser.add_argument('--resume-wait', type=int, default=10,
+                        help='Manual wait after reopening before typing done, in seconds (default: 10)')
     args = parser.parse_args()
-    if not re.fullmatch(r'[a-zA-Z0-9_-]+', args.label) or args.seconds < 1:
-        parser.error('Use a simple label and a positive duration')
+    if not re.fullmatch(r'[a-zA-Z0-9_-]+', args.label) or args.seconds < 1 or args.resume_wait < 0:
+        parser.error('Use a simple label, a positive duration, and a nonnegative resume wait')
     if os.geteuid() != 0 or not sys.stdin.isatty():
         sys.exit('Run with sudo in an interactive terminal.')
     if os.uname().release != KERNEL:
@@ -128,10 +130,10 @@ def main():
         (instance / 'tracing_on').write_text('1')
         status = 'armed'
         print(f'ARMED: {output}', flush=True)
-        print(f'Close the lid for {args.seconds} seconds. Reopen it, wait 10 seconds, then type done and press Enter here.', flush=True)
+        print(f'Close the lid for {args.seconds} seconds. Reopen it, wait {args.resume_wait} seconds, then type done and press Enter here.', flush=True)
         print('Use an external timer; these waits are manual. Capture continues across every wake while the lid is closed.', flush=True)
         if args.battery:
-            print('Keep power disconnected until results are saved. Close promptly and finish promptly after the 10-second resume wait.', flush=True)
+            print(f'Keep power disconnected until results are saved. Close promptly and finish promptly after the {args.resume_wait}-second resume wait.', flush=True)
         wait_for_done()
         status = 'finished'
     except (KeyboardInterrupt, EOFError):
@@ -155,6 +157,7 @@ def main():
                    'machine_suspend_seconds': periods(trace_text),
                    'boot_id': before['boot_id'], 'last_wake_irq': after['wake_irq']}
         summary['battery_test_requested'] = args.battery
+        summary['planned_resume_wait_seconds'] = args.resume_wait
         summary['battery'] = battery_summary(before, after, summary['machine_suspend_seconds'])
         for name in ('success', 'fail'):
             try:

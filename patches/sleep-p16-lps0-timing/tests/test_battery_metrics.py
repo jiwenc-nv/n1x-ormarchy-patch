@@ -55,7 +55,10 @@ class BatteryMetricsTests(unittest.TestCase):
     def test_zero_and_increasing_gauge_are_not_claimed_as_no_drain(self):
         before = snapshot(90000000, 100)
         zero = battery_summary(before, snapshot(90000000, 1900), [1780])
-        self.assertTrue(any('does not establish zero drain' in note for note in zero['notes']))
+        self.assertTrue(any('unresolved, not zero' in note for note in zero['notes']))
+        self.assertIsNone(zero['average_capture_power_w'])
+        self.assertIsNone(zero['energy_loss_percent_of_full_per_hour'])
+        self.assertEqual(zero['energy_used_wh'], 0)
         increased = battery_summary(before, snapshot(91000000, 1900), [1780])
         self.assertNotIn('average_capture_power_w', increased)
 
