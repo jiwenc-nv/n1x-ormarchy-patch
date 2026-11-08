@@ -1,0 +1,49 @@
+{
+  "date": "2026-11-08",
+  "question": "What changed between the low-power and high-power captures?",
+  "comparison": {
+    "kernel": {
+      "identical": true,
+      "value": "7.3.0-26-omarchy-p16-sleep1"
+    },
+    "cmdline": {
+      "identical": true,
+      "value": "Exact command-line match; full private copy retained in capture snapshots."
+    },
+    "patch_parameter": {
+      "identical": true,
+      "value": "Y"
+    },
+    "mem_sleep": {
+      "identical": true,
+      "value": "[s2idle] deep"
+    },
+    "pm_test": {
+      "identical": true,
+      "value": "[none] core processors platform devices freezer"
+    },
+    "loaded_modules": {
+      "identical": true,
+      "value": {
+        "nvidia": "4200B1C66D4D12038311105",
+        "nvidia_drm": "BD67F7BF0831CC62FA0D8D0",
+        "mt7925e": "610CA46AAD8D96716BBD49D"
+      }
+    }
+  },
+  "different_boots": true,
+  "software_changes_after_low_power_test": [
+    "Steam and dependencies installed at 18:47 on November 7.",
+    "Flatpak and dependencies installed at 21:32; package hooks regenerated boot images.",
+    "Build tools installed at 20:47 and 22:00.",
+    "WirePlumber and libwireplumber upgraded 0.5.18-1 to 0.5.19-1 at 22:02:35."
+  ],
+  "no_kernel_nvidia_or_wifi_package_upgrade_in_interval": true,
+  "current_power_profile": "balanced",
+  "previous_capture_power_profile": "Not recorded; cannot establish equality.",
+  "capture_change": "Optional wake-source and filtered ACPI IRQ tracing was added today. The earlier backpack heat and closed-lid wakes preceded its use; tracing effects are still a comparison variable.",
+  "observed_behavior_change": "The earlier two-hour trace had two timekeeping freeze entries. Both new captures have repeated entries about every 0.508 seconds, with approximately eight times the whole-capture reported power.",
+  "assessment": "A behavioral regression is observed, but a new kernel-patch regression is not established. Driver/firmware state across boots or device transitions and changed software/device configuration remain candidates. WirePlumber update is a concrete candidate, not a demonstrated cause.",
+  "next_step": "Preserve the current high-power state and trace IRQ/timer/IPI activity during s2idle before resetting state with a reboot or changing software. A later matched fresh-boot capture can check boot-state dependence.",
+  "system_changes_for_this_comparison": []
+}
