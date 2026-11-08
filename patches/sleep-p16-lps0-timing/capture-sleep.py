@@ -114,6 +114,29 @@ def wait_for_done():
         print('Still capturing. A blank Enter does not stop the capture.', flush=True)
 
 
+def wait_for_lid_cycle(cursor, resume_wait):
+    """Wait on journal events without scheduling periodic suspend-time polls."""
+    process = subprocess.Popen(
+        ['journalctl', '-b', '-u', 'systemd-logind', '--follow',
+         '--after-cursor', cursor, '--no-pager', '-o', 'cat'],
+        stdout=subprocess.PIPE, text=True,
+    )
+    closed = False
+    try:
+        for line in process.stdout:
+            if line.strip() == 'Lid closed.':
+                closed = True
+            elif closed and line.strip() == 'Lid opened.':
+                print(f'Lid reopened; finishing automatically after {resume_wait} seconds. Keep power disconnected.', flush=True)
+                time.sleep(resume_wait)
+                return
+        raise RuntimeError('Lid event monitor stopped before a close/open cycle completed')
+    finally:
+        process.terminate()
+        process.wait(timeout=5)
+        process.stdout.close()
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--mode', required=True, choices=('off', 'on'))
@@ -128,6 +151,8 @@ def main():
                         help='Also trace wake-source activity and ACPI event IRQs in the temporary instance')
     parser.add_argument('--idle-details', action='store_true',
                         help='Trace all handled IRQs, timer callbacks and IPIs during machine_suspend; implies --wake-details')
+    parser.add_argument('--auto-finish', action='store_true',
+                        help='Finish after a recorded lid close/open cycle and --resume-wait; no done input required')
     args = parser.parse_args()
     args.wake_details = args.wake_details or args.idle_details
     if not re.fullmatch(r'[a-zA-Z0-9_-]+', args.label) or args.seconds < 1 or args.resume_wait < 0:
@@ -204,6 +229,11 @@ def main():
             idle_trace.update(configure_idle_trace(instance, idle_triggers))
             (output / 'idle-trace.json').write_text(json.dumps(idle_trace, indent=2)+'\n')
         (output / 'before.json').write_text(json.dumps(before, indent=2)+'\n')
+        cursor = None
+        if args.auto_finish:
+            latest = subprocess.check_output(
+                ['journalctl', '-b', '-n', '1', '--no-pager', '-o', 'json'], text=True)
+            cursor = json.loads(latest)['__CURSOR']
         (instance / 'tracing_on').write_text('1')
         status = 'armed'
         print(f'ARMED: {output}', flush=True)
@@ -211,11 +241,17 @@ def main():
             print('Wake tracing: '+json.dumps(wake_trace), flush=True)
         if args.idle_details:
             print('Idle tracing: '+json.dumps(idle_trace), flush=True)
-        print(f'Close the lid for {args.seconds} seconds. Reopen it, wait {args.resume_wait} seconds, then type done and press Enter here.', flush=True)
+        if args.auto_finish:
+            print(f'Close the lid for {args.seconds} seconds using an external timer. After reopening, capture finishes automatically after {args.resume_wait} seconds; no typing required.', flush=True)
+        else:
+            print(f'Close the lid for {args.seconds} seconds. Reopen it, wait {args.resume_wait} seconds, then type done and press Enter here.', flush=True)
         print('Use an external timer; these waits are manual. Capture continues across every wake while the lid is closed.', flush=True)
         if args.battery:
             print(f'Keep power disconnected until results are saved. Close promptly and finish promptly after the {args.resume_wait}-second resume wait.', flush=True)
-        wait_for_done()
+        if args.auto_finish:
+            wait_for_lid_cycle(cursor, args.resume_wait)
+        else:
+            wait_for_done()
         status = 'finished'
     except (KeyboardInterrupt, EOFError):
         status = 'cancelled'
@@ -240,6 +276,7 @@ def main():
                    'boot_id': before['boot_id'], 'last_wake_irq': after['wake_irq']}
         summary['battery_test_requested'] = args.battery
         summary['planned_resume_wait_seconds'] = args.resume_wait
+        summary['auto_finish_on_lid_cycle'] = args.auto_finish
         summary['wake_trace'] = wake_trace
         summary['idle_trace'] = idle_trace
         summary['battery'] = battery_summary(before, after, summary['machine_suspend_seconds'])

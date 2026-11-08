@@ -342,6 +342,14 @@ Correlated events are evidence to investigate, not automatic proof of cause.
 Cleanup removes event triggers and the temporary trace instance. The collector
 does not start suspend, change the kernel, or persist tracing configuration.
 
+For an agent-operated capture, add `--auto-finish`. The collector watches
+logind's journal from a cursor recorded before arming, waits for a new lid
+close/open cycle, then waits `--resume-wait` seconds and saves automatically.
+There is no `done` input and no periodic lid-state polling during suspend.
+The closed-lid interval still requires a human and an external timer; this
+option neither wakes nor suspends the laptop. Launch in a visible terminal so
+sudo authentication stays in the user's terminal.
+
 Start with **30 minutes**. If suspend/resume works and the drain is reasonable,
 repeat for **two hours** to reduce the relative effect of gauge rounding and
 the short awake periods at the start/end. The first 30-minute test is now
