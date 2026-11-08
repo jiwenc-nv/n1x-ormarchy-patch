@@ -8,7 +8,10 @@ ending at lid reopening. `on-long` then completed a single 1131.942415-second
 sleep. All three enabled captures have zero recorded suspend failures and no
 kernel oops. The planned AC sequence is complete. The first 30-minute battery
 test also resumed successfully, but unchanged energy readings leave battery
-drain unresolved. Longer battery operation and long-term reliability remain
+drain unresolved for that run. The two-hour battery test then completed one
+7357.740068-second sleep, losing 2.985 Wh across the capture (about 1.45 W).
+Its final sample was 17.9 seconds after lid opening, shorter than the planned
+60-second wait. Longer battery operation and long-term reliability remain
 unverified. The graphics driver has not been
 changed. Results and the persistent SDHCI resume warning are summarized in
 `results/sleep-comparison-2026-11-07.json` and [README.md](README.md#runtime-results-2026-11-07).
@@ -21,7 +24,7 @@ default change did not require a reboot. A subsequent normal reboot confirmed
 Use phase E to verify or reproduce the default setting. Phases A–D below are
 the original installation and test sequence; do not restart them on this
 already-configured machine.
-The next runtime check is the two-hour unplugged battery-drain test in phase F.
+Phase F now records both completed battery tests; a longer repeat is optional.
 
 `off-03` ended before the lid test and is invalid. `off-03-retry` encountered
 a graphics kernel NULL dereference with the timing experiment disabled and
@@ -289,6 +292,13 @@ but both energy readings were 98.891 Wh. Follow-up awake readings changed
 in 0.016–0.032 Wh steps. This is not merely whole-percentage rounding, but
 the sleep drain is still unresolved. The result and caveats are archived in
 `results/battery-30m-2026-11-07.json`.
+
+The subsequent two-hour test is also complete: one 7357.740068-second sleep,
+97.126 → 94.141 Wh, and about 1.454 W average capture power. See
+`results/battery-2h-2026-11-07.json`. At a constant rate this projects to about
+68.7 hours from full, or 11.6% used in eight hours. Full-battery endurance has
+not been tested. The actual post-opening wait was about 17.9 seconds, so any
+repeat should use an external timer for the requested 60-second wait too.
 
 1. Save your work. Disconnect the charger and any USB-C source that supplies
    power; keep the other peripherals and power settings unchanged. If starting

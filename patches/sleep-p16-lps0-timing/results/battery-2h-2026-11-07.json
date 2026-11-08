@@ -1,0 +1,64 @@
+{
+  "date": "2026-11-07",
+  "capture": "battery-2h-01-20261107-163037-194472",
+  "original_summary": {
+    "status": "finished",
+    "mode": "on",
+    "planned_lid_seconds": 7200,
+    "capture_elapsed_seconds": 7390.481669,
+    "machine_suspend_seconds": [
+      7357.740068
+    ],
+    "last_wake_irq": "72",
+    "battery_test_requested": true,
+    "planned_resume_wait_seconds": 60,
+    "battery": {
+      "measurement_scope": "Entire capture, including awake and suspend/resume overhead",
+      "power_check_scope": "Endpoints only; keep all external power disconnected throughout",
+      "endpoints_on_battery": true,
+      "battery": "BAT0",
+      "measurement_seconds": 7390.481664,
+      "energy_before_wh": 97.126,
+      "energy_after_wh": 94.141,
+      "energy_full_before_wh": 99.902,
+      "energy_full_after_wh": 99.902,
+      "energy_used_wh": 2.985,
+      "reported_capacity_before_percent": "97",
+      "reported_capacity_after_percent": "94",
+      "machine_suspend_total_seconds": 7357.740068,
+      "outside_machine_suspend_seconds": 32.741596,
+      "machine_suspend_fraction_percent": 99.557,
+      "average_capture_power_w": 1.454,
+      "energy_loss_percent_of_full": 2.9879,
+      "energy_loss_percent_of_full_per_hour": 1.4555,
+      "notes": []
+    },
+    "success_delta": 1,
+    "fail_delta": 0
+  },
+  "assessment": {
+    "continuous_sleep_seconds": 7357.740068,
+    "lid_closed_seconds": 7363.851256,
+    "sample_seconds_after_lid_open": 17.884106,
+    "suspend_failures": 0,
+    "trace_event_losses": 0,
+    "wake_aligned_with_lid_open": true,
+    "gpu_recovery_check": "NVIDIA-SMI successful, 615.78.08",
+    "network_recovery_check": "NetworkManager connected, full connectivity",
+    "known_resume_warning": "SDHCI/PCIe hotplug teardown: Trying to free already-free IRQ 330; same warning observed in prior tests and on the stock kernel."
+  },
+  "energy_estimate": {
+    "whole_capture_average_w": 1.4540324282712407,
+    "percent_of_full_capacity_per_hour": 1.4554587778735568,
+    "full_battery_hours_at_this_rate": 68.70685829117141,
+    "eight_hour_loss_percent_at_this_rate": 11.643670222988455
+  },
+  "limitations": [
+    "Whole-capture energy includes 32.741596 seconds outside machine_suspend; it is not isolated steady-state suspend power.",
+    "The planned 60-second manual resume wait was not observed: the sample was taken about 17.9 seconds after the logged lid opening. Gauge settling was therefore not verified as planned.",
+    "Battery and external-power state are checked only at capture endpoints.",
+    "Full-battery duration and overnight loss are constant-rate extrapolations from one approximately two-hour test, not measured endurance.",
+    "The earlier 30-minute run had unchanged energy readings; gauge behavior remains a source of uncertainty."
+  ],
+  "next_step": "An optional overnight repeat can validate the projected drain; keep the same setup and actually wait at least 60 seconds after lid opening before typing done."
+}

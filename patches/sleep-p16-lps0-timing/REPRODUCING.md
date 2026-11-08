@@ -151,7 +151,10 @@ tests, the reboot confirmation, and the fresh-checkout reproduction check.
 The two off-mode tests repeatedly woke after about 1.6–3 seconds; the three
 on-mode tests each slept continuously, including 1131.942415 seconds. The later
 battery run slept for 1817.864748 seconds and resumed successfully, but its
-unchanged energy readings leave drain unresolved. Longer battery operation
+unchanged energy readings left that run's drain unresolved. The later two-hour
+battery run slept continuously for 7357.740068 seconds and measured 2.985 Wh
+lost, averaging about 1.45 W over the capture; its timing and gauge caveats
+are retained in `results/battery-2h-2026-11-07.json`. Longer battery operation
 and long-term reliability remain unverified. The invalid early
 capture and deferred off-mode graphics crash are described in the runbook.
 

@@ -6,8 +6,9 @@ ASUS ProArt P16 H7607BA, BIOS `H7607BA.304.L38`. This is a **whole-kernel build*
 Three enabled AC-powered lid tests completed continuous sleeps, including an
 18-minute-52-second run, after two off-mode baselines repeatedly woke within
 1.6–3 seconds. This supports the timing fix for the observed premature wakes;
-a subsequent 30-minute battery test also resumed successfully. Battery drain
-and long-term reliability remain unverified.
+subsequent 30-minute and two-hour battery tests also resumed successfully.
+The two-hour run measured about 1.45 W across the capture. Long-term reliability
+and full-battery sleep endurance remain unverified.
 
 Use [TESTING.md](TESTING.md) for the installation commands, reboot checkpoints,
 off/on lid tests and recovery steps. The helper scripts only change system
@@ -222,10 +223,19 @@ sleep with one successful suspend and no recorded suspend failures. Both
 energy endpoints reported 98.891 Wh, so battery drain is **unresolved**, not
 zero. Awake follow-up readings decreased in 0.016–0.032 Wh steps, showing the
 gauge updates while awake; this does not prove it accounts correctly for sleep
-energy. See [the battery result](results/battery-30m-2026-11-07.json). The next
-test is two hours unplugged with a 60-second manual wait after reopening to
-allow gauge settling. Longer battery operation and long-term reliability
-remain unverified.
+energy. See [the first battery result](results/battery-30m-2026-11-07.json).
+
+The [two-hour battery test](results/battery-2h-2026-11-07.json) then completed
+one 7357.740068-second sleep (2 h 2 min 38 s), ending at lid reopening, with
+no recorded suspend failures or trace losses. Energy fell from 97.126 to
+94.141 Wh: 2.985 Wh across a 7390.481664-second capture, or approximately
+1.454 W and 1.455% of full capacity per hour. At that constant rate, a full
+99.902 Wh battery would last about 68.7 hours; eight hours would use about
+11.6%. Those are extrapolations, not measured endurance. The capture included
+32.7 seconds outside suspend. The final sample was only 17.9 seconds after
+lid opening, so the requested 60-second settling wait was not observed.
+The known SDHCI/PCIe IRQ warning recurred; GPU and network checks passed.
+Longer battery operation and long-term reliability remain unverified.
 
 `set-default.py test` makes this boot selection reproducible, and
 `set-default.py stock` selects the original kernel as the persistent default.
