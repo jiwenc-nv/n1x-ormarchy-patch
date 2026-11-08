@@ -1,0 +1,109 @@
+{
+  "date": "2026-11-08",
+  "capture": "battery-idle-irqs-agent-3m-01-20261108-104729-597949",
+  "original_summary": {
+    "status": "finished",
+    "mode": "on",
+    "planned_lid_seconds": 180,
+    "capture_elapsed_seconds": 279.313938,
+    "machine_suspend_seconds": [
+      184.987125
+    ],
+    "boot_id": "19f96696-b8fc-4df2-a671-bc9f80c65d1c",
+    "last_wake_irq": "72",
+    "battery_test_requested": true,
+    "planned_resume_wait_seconds": 10,
+    "auto_finish_on_lid_cycle": true,
+    "wake_trace": {
+      "requested": true,
+      "enabled_events": [
+        "power/wakeup_source_activate",
+        "power/wakeup_source_deactivate"
+      ],
+      "unavailable_events": [],
+      "acpi_event_irqs": [
+        72,
+        141
+      ]
+    },
+    "idle_trace": {
+      "requested": true,
+      "scope": "machine_suspend begin through first subsequent device PM callback",
+      "enabled_events": [
+        "irq/irq_handler_entry",
+        "irq/softirq_entry",
+        "timer/timer_expire_entry",
+        "timer/hrtimer_expire_entry",
+        "timer/timer_start",
+        "timer/hrtimer_start",
+        "ipi/ipi_entry",
+        "ipi/ipi_raise"
+      ],
+      "unavailable_events": []
+    },
+    "battery": {
+      "measurement_scope": "Entire capture, including awake and suspend/resume overhead",
+      "power_check_scope": "Endpoints only; keep all external power disconnected throughout",
+      "endpoints_on_battery": true,
+      "battery": "BAT0",
+      "measurement_seconds": 279.313925,
+      "energy_before_wh": 81.401,
+      "energy_after_wh": 80.486,
+      "energy_full_before_wh": 99.902,
+      "energy_full_after_wh": 99.902,
+      "energy_used_wh": 0.915,
+      "reported_capacity_before_percent": "81",
+      "reported_capacity_after_percent": "81",
+      "machine_suspend_total_seconds": 184.987125,
+      "outside_machine_suspend_seconds": 94.3268,
+      "machine_suspend_fraction_percent": 66.229,
+      "average_capture_power_w": 11.7932,
+      "energy_loss_percent_of_full": 0.9159,
+      "energy_loss_percent_of_full_per_hour": 11.8048,
+      "notes": []
+    },
+    "success_delta": 1,
+    "fail_delta": 0
+  },
+  "auto_finish": "Succeeded after lid reopening; no done input required.",
+  "trace_losses": 0,
+  "steady_window": {
+    "excluded_start_seconds": 10,
+    "excluded_end_seconds": 5,
+    "duration_seconds": 169.98712499999965,
+    "timekeeping_freeze_exits": 335,
+    "median_exit_interval_seconds": 0.5079845000000205,
+    "irq_handler_counts": {
+      "irq=12 name=arch_timer": 22
+    },
+    "timer_expiry_callback_counts": {
+      "tick_nohz_handler": 22,
+      "tcp_orphan_update": 1
+    },
+    "ipi_entries": 0,
+    "freeze_exits_with_irq_or_timer_expiry_within_1ms": 22
+  },
+  "findings": [
+    "Most half-second timekeeping freeze exits lack corresponding traced Linux IRQ handlers, timer expiry callbacks or IPIs. Calling each exit an interrupt was an unproven inference.",
+    "sched_clock_poll is repeatedly rearmed but does not expire during the steady window. The exact kernel source calls hrtimer_start for it from sched_clock_resume, so this is consistent with resume bookkeeping rather than a demonstrated wake cause.",
+    "Sparse arch_timer/tick_nohz_handler events do occur, but do not explain most repeated exits.",
+    "No specific device interrupt has been identified as the periodic source. CPU idle/PSCI/firmware returns and interrupts not covered by Linux tracepoints remain investigation targets."
+  ],
+  "power_limit": "94.33 of 279.31 capture seconds were outside machine_suspend, including the delay before lid closure. The 11.79 W whole-capture average cannot isolate suspend power in this short run.",
+  "next_step": "Examine CPU-idle state selection and return paths, including available return-code instrumentation for the ACPI/PSCI entry path. Existing tracepoints do not establish firmware return reasons or hardware low-power residency.",
+  "source_references": [
+    "build/linux-7.3/kernel/time/sched_clock.c:304 (sched_clock_resume rearms sched_clock_timer)",
+    "build/linux-7.3/kernel/time/tick-common.c (timekeeping_freeze trace events)",
+    "build/linux-7.3/drivers/acpi/arm64/cpuidle.c (ACPI FFH to PSCI entry)"
+  ],
+  "private_evidence_sha256": {
+    "after.json": "eb58483e2109c7a0e414c7df114a7a34d1a3ed0059c79b7735e1d705c802eebb",
+    "before.json": "b91677ff942541a0062aed629ff873204a426301c385c3b73ad725bf87070753",
+    "idle-trace.json": "f6a0a136776ecc3225580f48f31267435b042f47599a25cc1355ca6b6cc8fc2d",
+    "journal.log": "c2819223d46fc8b096b918a9afb0fcdf4253160c06039d316cf480a8dddeb79a",
+    "summary.json": "36bed8567e9e15bf9b743f22a7a9dd978e1c64f0b144a46ff14b72feaada087d",
+    "trace-stats.txt": "a67c921226f533ebea68af3d5fc039f16560b844267ca93435522698db8e8f98",
+    "trace.txt": "c3963f5762bd0dabc5c1de3b42e5c2ff1cae748094da530d668502d06592a944",
+    "wake-trace.json": "21a80433427f44ef220bb887ccd37a3ed9245951f85efb5068ce811ff4b1a5ac"
+  }
+}
