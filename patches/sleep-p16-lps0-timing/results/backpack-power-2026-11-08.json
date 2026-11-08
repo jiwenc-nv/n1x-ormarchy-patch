@@ -1,0 +1,90 @@
+{
+  "date": "2026-11-08",
+  "capture": "battery-backpack-10m-01-20261108-095016-917019",
+  "original_summary": {
+    "status": "finished",
+    "mode": "on",
+    "planned_lid_seconds": 600,
+    "capture_elapsed_seconds": 910.866151,
+    "machine_suspend_seconds": [
+      884.685793
+    ],
+    "boot_id": "19f96696-b8fc-4df2-a671-bc9f80c65d1c",
+    "last_wake_irq": "72",
+    "battery_test_requested": true,
+    "planned_resume_wait_seconds": 6,
+    "wake_trace": {
+      "requested": true,
+      "enabled_events": [
+        "power/wakeup_source_activate",
+        "power/wakeup_source_deactivate",
+        "irq/irq_handler_entry"
+      ],
+      "unavailable_events": [],
+      "acpi_event_irqs": [
+        72,
+        141
+      ]
+    },
+    "battery": {
+      "measurement_scope": "Entire capture, including awake and suspend/resume overhead",
+      "power_check_scope": "Endpoints only; keep all external power disconnected throughout",
+      "endpoints_on_battery": true,
+      "battery": "BAT0",
+      "measurement_seconds": 910.866148,
+      "energy_before_wh": 93.018,
+      "energy_after_wh": 90.05,
+      "energy_full_before_wh": 99.902,
+      "energy_full_after_wh": 99.902,
+      "energy_used_wh": 2.968,
+      "reported_capacity_before_percent": "93",
+      "reported_capacity_after_percent": "90",
+      "machine_suspend_total_seconds": 884.685793,
+      "outside_machine_suspend_seconds": 26.180355,
+      "machine_suspend_fraction_percent": 97.126,
+      "average_capture_power_w": 11.7304,
+      "energy_loss_percent_of_full": 2.9709,
+      "energy_loss_percent_of_full_per_hour": 11.7419,
+      "notes": []
+    },
+    "success_delta": 1,
+    "fail_delta": 0
+  },
+  "assessment": {
+    "continuous_software_suspend_seconds": 884.685793,
+    "wake_aligned_with_lid_open": true,
+    "trace_losses": 0,
+    "timekeeping_freeze_entry_count_within_machine_suspend": 1755,
+    "median_freeze_entry_interval_seconds": 0.5075514999998632,
+    "earlier_two_hour_capture_freeze_entry_count": 2,
+    "thermal_before_celsius": [
+      35,
+      38
+    ],
+    "thermal_after_celsius": [
+      48,
+      53
+    ],
+    "internal_wakeup_source_activations": 0,
+    "internal_filtered_acpi_irq_entries": 0,
+    "interpretation": "Software suspend completed, but high reported energy loss and rising endpoint temperatures support excessive suspend power. Frequent tick freeze/unfreeze activity differs sharply from the earlier low-drain run. This does not identify the interrupt or establish that periodic activity alone explains the power loss."
+  },
+  "limitations": [
+    "26.18 seconds outside machine_suspend are included in energy loss.",
+    "Requested resume settling wait was six seconds, not sixty; final energy sample was about 13.7 seconds after lid-open. Gauge settling remains uncertain.",
+    "IRQ tracing was filtered to ACPI event IRQs 72 and 141. Other hardware interrupts, timers, and IPIs were not traced. Absence of filtered events does not imply no CPU activity.",
+    "Thermal readings are endpoints, not bag peak temperatures.",
+    "Whole-capture interrupt deltas mix awake and suspend activity and cannot identify the periodic wake source."
+  ],
+  "next_step": "Instrument IRQ/timer/IPI activity during s2idle, correlate it with the half-second freeze/unfreeze cycle, and compare with the low-drain capture before selecting a driver or firmware fix.",
+  "source_reference": "build/linux-7.3/kernel/time/tick-common.c tick_freeze/tick_unfreeze",
+  "private_evidence_sha256": {
+    "after.json": "267469008b58ad7dc31fcfac1f95059aa66aeba24e01a2cc75a4a5efa7893164",
+    "before.json": "2d8c25ce88f98cf819780c62c330d438640d5b213c28739f5e84b69a6de67ee7",
+    "journal.log": "28c89afc3247b9bf9063418af881806aef111b07ada833865f8accc5d5fa7824",
+    "summary.json": "3cc25d63927f86bf4e4696da5b3667daa35875d59e01a657b70f09b3e868fcb9",
+    "trace-stats.txt": "9735d9aaea0bf70dc588a8b8b4cec35aa223d3b75622de4259777c18a2cf7ad9",
+    "trace.txt": "01c2932b5b768a00f6d73517f0f50f992c1fcf7c91267e52c87dcc1289f99f59",
+    "wake-trace.json": "e47971fdd7d0297771747676a59e82671baa40eeea3cb698a48f246aae3a475e"
+  }
+}

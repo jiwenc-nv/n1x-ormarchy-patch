@@ -311,3 +311,18 @@ the overnight incident. See the [trip evidence](results/backpack-sleep-2026-11-0
 Next diagnostics should capture each wake cause and actual energy/residency;
 use shutdown for backpack transport while heat and sleep reliability remain
 unresolved.
+
+The subsequent [instrumented backpack capture](results/backpack-power-2026-11-08.json)
+recorded one 884.685793-second software suspend ending at lid reopening, with
+no trace losses. Reported energy fell by 2.968 Wh across a 910.866-second
+capture, approximately 11.73 W including 26.18 seconds outside suspend.
+Thermal endpoints rose from 35/38 to 48/53 degrees C. The trace contains
+1,755 timekeeping freeze entries inside that suspend period, about 0.508
+seconds apart; the earlier low-drain two-hour trace had only two entries.
+This establishes a different internal idle pattern despite one continuous
+software suspend. It does not identify the interrupt or prove that this
+periodic activity alone accounts for the power loss. Neither wake-source
+activations nor the filtered ACPI IRQs appear inside the period; the next
+diagnostic should cover other IRQs, timers, and IPIs. The requested resume
+wait was six seconds and the actual endpoint was about 13.7 seconds after
+lid opening, so battery-gauge settling is still a limitation.
