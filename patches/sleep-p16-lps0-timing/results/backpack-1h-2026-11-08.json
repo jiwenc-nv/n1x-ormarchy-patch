@@ -1,0 +1,148 @@
+{
+  "date": "2026-11-08",
+  "timezone": "America/Chicago",
+  "capture": "battery-backpack-1h-01-20261108-212420-546013",
+  "original_summary": {
+    "status": "finished",
+    "mode": "on",
+    "planned_lid_seconds": 3600,
+    "capture_elapsed_seconds": 6342.186302,
+    "machine_suspend_seconds": [
+      6270.696583
+    ],
+    "boot_id": "02d747db-4cdf-4142-903d-d3a66de0b4ca",
+    "last_wake_irq": "72",
+    "battery_test_requested": true,
+    "planned_resume_wait_seconds": 60,
+    "auto_finish_on_lid_cycle": true,
+    "wake_trace": {
+      "requested": true,
+      "enabled_events": [
+        "power/wakeup_source_activate",
+        "power/wakeup_source_deactivate"
+      ],
+      "unavailable_events": [],
+      "acpi_event_irqs": [
+        72,
+        141
+      ]
+    },
+    "idle_trace": {
+      "requested": true,
+      "scope": "machine_suspend begin through first subsequent device PM callback",
+      "enabled_events": [
+        "irq/irq_handler_entry",
+        "irq/softirq_entry",
+        "timer/timer_expire_entry",
+        "timer/hrtimer_expire_entry",
+        "timer/timer_start",
+        "timer/hrtimer_start",
+        "ipi/ipi_entry",
+        "ipi/ipi_raise"
+      ],
+      "unavailable_events": []
+    },
+    "battery": {
+      "measurement_scope": "Entire capture, including awake and suspend/resume overhead",
+      "power_check_scope": "Endpoints only; keep all external power disconnected throughout",
+      "endpoints_on_battery": true,
+      "battery": "BAT0",
+      "measurement_seconds": 6342.186303,
+      "energy_before_wh": 18.035,
+      "energy_after_wh": 15.099,
+      "energy_full_before_wh": 99.902,
+      "energy_full_after_wh": 99.902,
+      "energy_used_wh": 2.936,
+      "reported_capacity_before_percent": "18",
+      "reported_capacity_after_percent": "15",
+      "machine_suspend_total_seconds": 6270.696583,
+      "outside_machine_suspend_seconds": 71.48972,
+      "machine_suspend_fraction_percent": 98.873,
+      "average_capture_power_w": 1.6666,
+      "energy_loss_percent_of_full": 2.9389,
+      "energy_loss_percent_of_full_per_hour": 1.6682,
+      "notes": []
+    },
+    "success_delta": 1,
+    "fail_delta": 0
+  },
+  "assessment": "Continuous low-drain backpack sleep, with no half-second idle-exit loop. Resume completed but included PCIe/IRQ and NVIDIA allocation warnings; not an error-free resume.",
+  "lid_events": {
+    "closed": "2026-11-08T21:24:23.671313-06:00",
+    "opened": "2026-11-08T23:09:00.396703-06:00"
+  },
+  "actual_final_sample_seconds_after_lid_open": 62.33336,
+  "freeze_events": [
+    [
+      30160.862988,
+      "suspend_resume",
+      "timekeeping_freeze[11] begin"
+    ],
+    [
+      36431.557455,
+      "suspend_resume",
+      "timekeeping_freeze[11] end"
+    ],
+    [
+      36431.557543,
+      "suspend_resume",
+      "timekeeping_freeze[11] begin"
+    ],
+    [
+      36431.558049,
+      "suspend_resume",
+      "timekeeping_freeze[0] end"
+    ]
+  ],
+  "central_trace_events_excluding_ten_seconds_at_each_end": 0,
+  "trace_losses": 0,
+  "thermal_endpoints_celsius": {
+    "before": [
+      41,
+      44
+    ],
+    "after": [
+      32,
+      36
+    ]
+  },
+  "kernel_suspend_success_before_after": [
+    6,
+    7
+  ],
+  "kernel_suspend_fail_before_after": [
+    0,
+    0
+  ],
+  "resume_warnings": [
+    "2026-11-08T23:09:00.406174-06:00 mercury kernel: Trying to free already-free IRQ 364",
+    "2026-11-08T23:09:00.406195-06:00 mercury kernel: WARNING: kernel/irq/manage.c:1881 at free_irq+0x1a0/0x2e0, CPU#2: irq/308-pciehp/189",
+    "2026-11-08T23:09:02.552833-06:00 mercury kernel: NVRM: GPU0 nvCheckOkFailedNoLog: Check failed: Out of memory [NV_ERR_NO_MEMORY] (0x00000051) returned from _memdescAllocInternal(pMemDesc) @ mem_desc.c:1348",
+    "2026-11-08T23:09:02.561831-06:00 mercury kernel: NVRM: GPU0 nvCheckOkFailedNoLog: Check failed: Out of memory [NV_ERR_NO_MEMORY] (0x00000051) returned from _memdescAllocInternal(pMemDesc) @ mem_desc.c:1348"
+  ],
+  "recovery_checks": {
+    "nvidia_smi": "Successful query: NVIDIA RTX Spark N1X, 615.78.08, GPU utilization 7%; memory.used/total unsupported (N/A).",
+    "network_manager": "connected; full connectivity"
+  },
+  "interpretation": [
+    "Reported capture power 1.6666 W is in the low-drain range of yesterday\u2019s approximately 1.45 W and today\u2019s 1.39 W long run, unlike the earlier approximately 11.7 W state.",
+    "NVIDIA allocation failures were logged after lid reopening, not during the uninterrupted low-drain portion. They do not establish that the earlier high-power state returned.",
+    "A successful NVIDIA-SMI query confirms driver responsiveness but does not prove every graphical application recovered correctly."
+  ],
+  "limitations": [
+    "Whole-capture energy includes 71.49 seconds outside machine_suspend; it is not isolated steady-state sleep power.",
+    "External power checked at endpoints only.",
+    "Thermal samples are endpoints, not continuous bag temperatures.",
+    "The cause of the earlier high-power state and prior overnight no-wake incident remains unresolved."
+  ],
+  "private_evidence_sha256": {
+    "after.json": "67ef088f2d8452ba96793c88fb2319c2d231d7f0c555b60c955c79986f3c3749",
+    "before.json": "51ebf9d43fc6cecf7894c96c05a4969da16e56f3ad46c602581fa53ca3a9d9d8",
+    "idle-trace.json": "f6a0a136776ecc3225580f48f31267435b042f47599a25cc1355ca6b6cc8fc2d",
+    "journal.log": "bc23209c992077ae75c00ac1d4a8b00eee3aa42dee9eba152a902bb4f2e189d1",
+    "summary.json": "b8461c2ac4e0215ddafef159eb4f1ad6d75de38feb7dc0b3f67b3a42260a160e",
+    "trace-stats.txt": "3d568e2859f8844feec17a5b5102df1f6d7cc693c6d6dfb6887ccf5951028875",
+    "trace.txt": "233e6bc50d30a2ec373a856794ffeb7d79bf3f078f7fde4735777c7010580e5d",
+    "wake-trace.json": "21a80433427f44ef220bb887ccd37a3ed9245951f85efb5068ce811ff4b1a5ac"
+  }
+}
