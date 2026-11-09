@@ -1,0 +1,133 @@
+{
+  "date": "2026-11-08",
+  "capture": "battery-apps-tabletop-10m-02-20261108-154644-597342",
+  "original_summary": {
+    "status": "finished",
+    "mode": "on",
+    "planned_lid_seconds": 600,
+    "capture_elapsed_seconds": 794.885138,
+    "machine_suspend_seconds": [
+      726.936966
+    ],
+    "boot_id": "02d747db-4cdf-4142-903d-d3a66de0b4ca",
+    "last_wake_irq": "72",
+    "battery_test_requested": true,
+    "planned_resume_wait_seconds": 60,
+    "auto_finish_on_lid_cycle": true,
+    "wake_trace": {
+      "requested": true,
+      "enabled_events": [
+        "power/wakeup_source_activate",
+        "power/wakeup_source_deactivate"
+      ],
+      "unavailable_events": [],
+      "acpi_event_irqs": [
+        72,
+        141
+      ]
+    },
+    "idle_trace": {
+      "requested": true,
+      "scope": "machine_suspend begin through first subsequent device PM callback",
+      "enabled_events": [
+        "irq/irq_handler_entry",
+        "irq/softirq_entry",
+        "timer/timer_expire_entry",
+        "timer/hrtimer_expire_entry",
+        "timer/timer_start",
+        "timer/hrtimer_start",
+        "ipi/ipi_entry",
+        "ipi/ipi_raise"
+      ],
+      "unavailable_events": []
+    },
+    "battery": {
+      "measurement_scope": "Entire capture, including awake and suspend/resume overhead",
+      "power_check_scope": "Endpoints only; keep all external power disconnected throughout",
+      "endpoints_on_battery": true,
+      "battery": "BAT0",
+      "measurement_seconds": 794.884986,
+      "energy_before_wh": 62.483,
+      "energy_after_wh": 61.857,
+      "energy_full_before_wh": 99.902,
+      "energy_full_after_wh": 99.902,
+      "energy_used_wh": 0.626,
+      "reported_capacity_before_percent": "63",
+      "reported_capacity_after_percent": "62",
+      "machine_suspend_total_seconds": 726.936966,
+      "outside_machine_suspend_seconds": 67.94802,
+      "machine_suspend_fraction_percent": 91.452,
+      "average_capture_power_w": 2.8351,
+      "energy_loss_percent_of_full": 0.6266,
+      "energy_loss_percent_of_full_per_hour": 2.8379,
+      "notes": []
+    },
+    "success_delta": 1,
+    "fail_delta": 0
+  },
+  "assessment": "Fourth healthy captured suspend after reboot, including a long backpack sleep and two apps-open tabletop runs. No recurrence of the earlier half-second idle-exit loop.",
+  "freeze_events": [
+    [
+      17103.685578,
+      "suspend_resume",
+      "timekeeping_freeze[13] begin"
+    ],
+    [
+      17830.62046,
+      "suspend_resume",
+      "timekeeping_freeze[13] end"
+    ],
+    [
+      17830.620494,
+      "suspend_resume",
+      "timekeeping_freeze[13] begin"
+    ],
+    [
+      17830.621029,
+      "suspend_resume",
+      "timekeeping_freeze[0] end"
+    ]
+  ],
+  "central_trace_events_excluding_ten_seconds_at_each_end": 0,
+  "trace_losses": 0,
+  "thermal_endpoints_celsius": {
+    "before": [
+      38,
+      41
+    ],
+    "after": [
+      36,
+      40
+    ]
+  },
+  "kernel_success_counter_before_after": [
+    4,
+    5
+  ],
+  "kernel_fail_counter_before_after": [
+    0,
+    0
+  ],
+  "counter_note": "Kernel totals include one additional successful suspend outside the four captured post-reboot tests.",
+  "learning": [
+    "The same patched kernel and enabled flag support both the earlier bad state and subsequent healthy long and repeated sleeps; a newly changed kernel binary is not the established cause.",
+    "Simply opening the user-reported apps, including Slack, did not reproduce the previous high-power idle pattern in two captured runs.",
+    "A single suspend/resume cycle does not invariably cause the bad state; recovery persisted through repeated cycles.",
+    "The trigger that creates the previous high-power state remains unidentified. Reboot coincided with driver/hardware reinitialization and a fresh app/session state."
+  ],
+  "limitations": [
+    "Whole-capture power is 2.8351 W, including 67.95 seconds outside suspend, rather than isolated steady-state power.",
+    "These tests do not establish indefinite or overnight reliability or exclude a specific app workload or device transition as a trigger."
+  ],
+  "next_step": "Retain the working kernel and flag; use normal workload and preserve a capture before reboot if heat or drain returns, to identify the transition into the bad state.",
+  "private_evidence_sha256": {
+    "after.json": "859ea7ac21d800abe96fe39e29dabb2a258f2eb05586524a879bda2c1f5abb5f",
+    "before.json": "25c7efee2b295e1f8f7ed79b6337829b1a2708bedc71ca80e6c879c6fd3ee13a",
+    "idle-trace.json": "f6a0a136776ecc3225580f48f31267435b042f47599a25cc1355ca6b6cc8fc2d",
+    "journal.log": "f5ad1a4e378beaacc08ec3554045bf3fff9923902bf788dc39c46565b30d305f",
+    "summary.json": "ce93eeef7cfdb1df1fea6d0087a98eec00d56618fbb290b5350007a906700ebf",
+    "trace-stats.txt": "1a6adab9b34b2841b3d817bda061ec77545c33b2cb7f5684571c65628e0cbe85",
+    "trace.txt": "0612b61495793da986b9f3389d3e5b7d664297b07f5c8403fb47186d39f83620",
+    "wake-trace.json": "21a80433427f44ef220bb887ccd37a3ed9245951f85efb5068ce811ff4b1a5ac"
+  }
+}
