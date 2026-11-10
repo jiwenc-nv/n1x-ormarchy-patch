@@ -1,0 +1,256 @@
+{
+  "date": "2026-11-10",
+  "timezone": "America/Chicago",
+  "capture": "battery-sleep-1h-20261110-01-20261110-074801-143274",
+  "original_summary": {
+    "status": "finished",
+    "mode": "on",
+    "planned_lid_seconds": 3600,
+    "capture_elapsed_seconds": 5076.094883,
+    "machine_suspend_seconds": [
+      5006.320906
+    ],
+    "boot_id": "02d747db-4cdf-4142-903d-d3a66de0b4ca",
+    "last_wake_irq": "72",
+    "battery_test_requested": true,
+    "planned_resume_wait_seconds": 60,
+    "auto_finish_on_lid_cycle": true,
+    "wake_trace": {
+      "requested": true,
+      "enabled_events": [
+        "power/wakeup_source_activate",
+        "power/wakeup_source_deactivate"
+      ],
+      "unavailable_events": [],
+      "acpi_event_irqs": [
+        72,
+        141
+      ]
+    },
+    "idle_trace": {
+      "requested": true,
+      "scope": "machine_suspend begin through first subsequent device PM callback",
+      "enabled_events": [
+        "irq/irq_handler_entry",
+        "irq/softirq_entry",
+        "timer/timer_expire_entry",
+        "timer/hrtimer_expire_entry",
+        "timer/timer_start",
+        "timer/hrtimer_start",
+        "ipi/ipi_entry",
+        "ipi/ipi_raise"
+      ],
+      "unavailable_events": []
+    },
+    "battery": {
+      "measurement_scope": "Entire capture, including awake and suspend/resume overhead",
+      "power_check_scope": "Endpoints only; keep all external power disconnected throughout",
+      "endpoints_on_battery": true,
+      "battery": "BAT0",
+      "measurement_seconds": 5076.094877,
+      "energy_before_wh": 90.05,
+      "energy_after_wh": 87.851,
+      "energy_full_before_wh": 99.902,
+      "energy_full_after_wh": 99.902,
+      "energy_used_wh": 2.199,
+      "reported_capacity_before_percent": "90",
+      "reported_capacity_after_percent": "88",
+      "machine_suspend_total_seconds": 5006.320906,
+      "outside_machine_suspend_seconds": 69.773971,
+      "machine_suspend_fraction_percent": 98.625,
+      "average_capture_power_w": 1.5595,
+      "energy_loss_percent_of_full": 2.2012,
+      "energy_loss_percent_of_full_per_hour": 1.5611,
+      "notes": []
+    },
+    "success_delta": 1,
+    "fail_delta": 0
+  },
+  "assessment": "Continuous low-drain suspend in the same boot as the November 8 recovery. No sustained half-second idle-exit pattern; NVIDIA allocation errors recur during resume.",
+  "lid_events": {
+    "closed": "2026-11-10T07:48:04.443562-06:00",
+    "opened": "2026-11-10T09:11:36.467501-06:00"
+  },
+  "actual_final_sample_seconds_after_lid_open": 60.767922,
+  "freeze_events": [
+    [
+      153981.480563,
+      "suspend_resume",
+      "timekeeping_freeze[16] begin"
+    ],
+    [
+      153981.480852,
+      "suspend_resume",
+      "timekeeping_freeze[2] end"
+    ],
+    [
+      153981.481084,
+      "suspend_resume",
+      "timekeeping_freeze[2] begin"
+    ],
+    [
+      153981.481205,
+      "suspend_resume",
+      "timekeeping_freeze[0] end"
+    ],
+    [
+      153981.481406,
+      "suspend_resume",
+      "timekeeping_freeze[0] begin"
+    ],
+    [
+      153981.481582,
+      "suspend_resume",
+      "timekeeping_freeze[1] end"
+    ],
+    [
+      153981.481834,
+      "suspend_resume",
+      "timekeeping_freeze[1] begin"
+    ],
+    [
+      153981.481952,
+      "suspend_resume",
+      "timekeeping_freeze[3] end"
+    ],
+    [
+      153981.482205,
+      "suspend_resume",
+      "timekeeping_freeze[3] begin"
+    ],
+    [
+      153981.482343,
+      "suspend_resume",
+      "timekeeping_freeze[4] end"
+    ],
+    [
+      153981.482485,
+      "suspend_resume",
+      "timekeeping_freeze[4] begin"
+    ],
+    [
+      153981.482651,
+      "suspend_resume",
+      "timekeeping_freeze[5] end"
+    ],
+    [
+      153981.482792,
+      "suspend_resume",
+      "timekeeping_freeze[5] begin"
+    ],
+    [
+      153981.48297,
+      "suspend_resume",
+      "timekeeping_freeze[6] end"
+    ],
+    [
+      153981.483109,
+      "suspend_resume",
+      "timekeeping_freeze[6] begin"
+    ],
+    [
+      153981.483216,
+      "suspend_resume",
+      "timekeeping_freeze[7] end"
+    ],
+    [
+      153981.483319,
+      "suspend_resume",
+      "timekeeping_freeze[7] begin"
+    ],
+    [
+      153981.483432,
+      "suspend_resume",
+      "timekeeping_freeze[8] end"
+    ],
+    [
+      153981.483536,
+      "suspend_resume",
+      "timekeeping_freeze[8] begin"
+    ],
+    [
+      153981.48425,
+      "suspend_resume",
+      "timekeeping_freeze[9] end"
+    ],
+    [
+      153981.484642,
+      "suspend_resume",
+      "timekeeping_freeze[10] begin"
+    ],
+    [
+      158987.798913,
+      "suspend_resume",
+      "timekeeping_freeze[10] end"
+    ],
+    [
+      158987.799034,
+      "suspend_resume",
+      "timekeeping_freeze[10] begin"
+    ],
+    [
+      158987.799139,
+      "suspend_resume",
+      "timekeeping_freeze[11] end"
+    ],
+    [
+      158987.799341,
+      "suspend_resume",
+      "timekeeping_freeze[11] begin"
+    ],
+    [
+      158987.799518,
+      "suspend_resume",
+      "timekeeping_freeze[0] end"
+    ]
+  ],
+  "central_trace_events_excluding_ten_seconds_at_each_end": 0,
+  "freeze_event_note": "Several brief exits occur within milliseconds of entry and final resume. There are no recorded events in the central sleep window; do not mistake the increased total edge-event count for the earlier sustained half-second loop.",
+  "trace_losses": 0,
+  "thermal_endpoints_celsius": {
+    "before": [
+      35,
+      38
+    ],
+    "after": [
+      30,
+      32
+    ]
+  },
+  "kernel_success_before_after": [
+    14,
+    15
+  ],
+  "kernel_fail_before_after": [
+    0,
+    0
+  ],
+  "kernel_counter_note": "Totals include other suspends outside the controlled captures and do not prove low power for every past cycle.",
+  "resume_warnings": [
+    "2026-11-10T09:11:38.778213-06:00 mercury kernel: NVRM: --- last print repeated 1 times ---",
+    "2026-11-10T09:11:38.778240-06:00 mercury kernel: NVRM: GPU0 nvCheckOkFailedNoLog: Check failed: Out of memory [NV_ERR_NO_MEMORY] (0x00000051) returned from _memdescAllocInternal(pMemDesc) @ mem_desc.c:1348",
+    "2026-11-10T09:11:38.778670-06:00 mercury kernel: NVRM: GPU0 nvCheckOkFailedNoLog: Check failed: Out of memory [NV_ERR_NO_MEMORY] (0x00000051) returned from _memdescAllocInternal(pMemDesc) @ mem_desc.c:1348"
+  ],
+  "recovery_checks": {
+    "nvidia_smi": "Successful: NVIDIA RTX Spark N1X, 615.78.08, utilization 16% at post-test query.",
+    "network_manager": "connected; full connectivity"
+  },
+  "comparison": "Whole-capture power 1.5595 W is within the recent low-drain range of approximately 1.39 to 1.67 W, far below the earlier approximately 11.7 W state.",
+  "limitations": [
+    "Power covers the entire capture, including 69.77 seconds outside machine_suspend.",
+    "External power checked only at endpoints.",
+    "Endpoint temperatures are not continuous sleep temperatures.",
+    "NVIDIA-SMI responsiveness does not prove every graphics application recovered correctly.",
+    "The cause of the earlier high-power state and overnight no-wake failure remains unresolved."
+  ],
+  "private_evidence_sha256": {
+    "after.json": "748c04bdbaf407c74c6b970186828a3fff9623406ef00f5d315aa161603014e2",
+    "before.json": "a44fe88f46da6df71f29e5073b0cb558c25aab0cc9e9804d6ae8065890ad513f",
+    "idle-trace.json": "f6a0a136776ecc3225580f48f31267435b042f47599a25cc1355ca6b6cc8fc2d",
+    "journal.log": "bc15b0e19bb91f8841354456a36e0e1eccac5a84ef2240a34b2539e0bd18b5b8",
+    "summary.json": "272121f05022878b512df6dc3e2f11e6adcc66739c1b539d9f094fc81676e896",
+    "trace-stats.txt": "5bccc9c982865119eb0b7ec9a276e4b4d732ba161501c7ae92f59f860d4f0ae7",
+    "trace.txt": "08767d72bc9c5339c4e7f19e340997383c06726ef83e0dc8d3f42de8b45d4011",
+    "wake-trace.json": "21a80433427f44ef220bb887ccd37a3ed9245951f85efb5068ce811ff4b1a5ac"
+  }
+}
