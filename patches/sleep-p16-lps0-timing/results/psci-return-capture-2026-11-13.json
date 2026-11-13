@@ -1,0 +1,169 @@
+{
+  "date": "2026-11-13",
+  "timezone": "America/Chicago",
+  "capture": "battery-idle-returns-10m-01-20261113-001034-227463",
+  "original_summary": {
+    "status": "finished",
+    "mode": "on",
+    "planned_lid_seconds": 600,
+    "capture_elapsed_seconds": 642.295953,
+    "machine_suspend_seconds": [
+      570.750235
+    ],
+    "boot_id": "3aa62104-561d-4e1c-baa5-46b14844082b",
+    "last_wake_irq": "72",
+    "battery_test_requested": true,
+    "planned_resume_wait_seconds": 60,
+    "auto_finish_on_lid_cycle": true,
+    "wake_trace": {
+      "requested": true,
+      "enabled_events": [
+        "power/wakeup_source_activate",
+        "power/wakeup_source_deactivate"
+      ],
+      "unavailable_events": [],
+      "acpi_event_irqs": [
+        72,
+        141
+      ]
+    },
+    "idle_trace": {
+      "requested": true,
+      "scope": "machine_suspend begin through first subsequent device PM callback",
+      "enabled_events": [
+        "irq/irq_handler_entry",
+        "irq/softirq_entry",
+        "timer/timer_expire_entry",
+        "timer/hrtimer_expire_entry",
+        "timer/timer_start",
+        "timer/hrtimer_start",
+        "ipi/ipi_entry",
+        "ipi/ipi_raise",
+        "p16_ret_24360_1794550234295281408/psci_enter",
+        "p16_ret_24360_1794550234295281408/psci_return"
+      ],
+      "unavailable_events": []
+    },
+    "return_trace": {
+      "requested": true,
+      "events": [
+        "p16_ret_24360_1794550234295281408/psci_enter",
+        "p16_ret_24360_1794550234295281408/psci_return"
+      ],
+      "group": "p16_ret_24360_1794550234295281408",
+      "maxactive": 128,
+      "acpi_wrapper": "Not probed: protected idle text; use PSCI returns and idle-state counters",
+      "definitions": [
+        "p:p16_ret_24360_1794550234295281408/psci_enter psci_cpu_suspend_enter state=$arg1:x32",
+        "r128:p16_ret_24360_1794550234295281408/psci_return psci_cpu_suspend_enter state=$arg1:x32 ret=$retval:s32"
+      ]
+    },
+    "battery": {
+      "measurement_scope": "Entire capture, including awake and suspend/resume overhead",
+      "power_check_scope": "Endpoints only; keep all external power disconnected throughout",
+      "endpoints_on_battery": true,
+      "battery": "BAT0",
+      "measurement_seconds": 642.295923,
+      "energy_before_wh": 70.441,
+      "energy_after_wh": 69.96,
+      "energy_full_before_wh": 99.902,
+      "energy_full_after_wh": 99.902,
+      "energy_used_wh": 0.481,
+      "reported_capacity_before_percent": "71",
+      "reported_capacity_after_percent": "70",
+      "machine_suspend_total_seconds": 570.750235,
+      "outside_machine_suspend_seconds": 71.545688,
+      "machine_suspend_fraction_percent": 88.861,
+      "average_capture_power_w": 2.696,
+      "energy_loss_percent_of_full": 0.4815,
+      "energy_loss_percent_of_full_per_hour": 2.6986,
+      "notes": []
+    },
+    "success_delta": 1,
+    "fail_delta": 0
+  },
+  "assessment": "Healthy continuous idle during the instrumented run; the prior bad state did not reproduce. Recovery happened in the same boot, after an AC connection/disconnection and with added return probes.",
+  "trace_buffer_losses": 0,
+  "probe_missed_calls": "Unknown: profile file was empty because collector filtered by group but this kernel prints unqualified event names. The collector was corrected to preserve the full profile for future captures; definitions were already removed, so counts cannot be recovered for this run.",
+  "psci_return_codes_inside_machine_suspend": {
+    "0": 21
+  },
+  "all_recorded_psci_return_codes": {
+    "0": 38,
+    "-95": 1
+  },
+  "psci_entry_state_counts_inside_machine_suspend": {
+    "0x20100f0": 19,
+    "0x1010013": 1
+  },
+  "psci_early_resume_errors": [
+    {
+      "seconds_after_machine_suspend_end": 0.00033799999982875306,
+      "event": "          <idle>-0       [002] d..2.  5361.063238: psci_return: (acpi_processor_ffh_lpi_enter+0xcc/0xe0 <- psci_cpu_suspend_enter) state=0x1010013 ret=-95"
+    }
+  ],
+  "return_code_interpretation": "All 21 returns recorded inside machine_suspend were zero. One -95/EOPNOTSUPP return occurred 0.000338 seconds after its end for state 0x1010013. This is the Linux wrapper return, not necessarily the raw firmware status: arm64 cpu_suspend converts an unexpected zero return through its finisher into -EOPNOTSUPP. This isolated early-resume error does not identify the prior steady high-power loop\u2019s cause.",
+  "freeze_events": [
+    [
+      4790.313575,
+      "suspend_resume",
+      "timekeeping_freeze[10] begin"
+    ],
+    [
+      5361.061705,
+      "suspend_resume",
+      "timekeeping_freeze[10] end"
+    ],
+    [
+      5361.061762,
+      "suspend_resume",
+      "timekeeping_freeze[10] begin"
+    ],
+    [
+      5361.062302,
+      "suspend_resume",
+      "timekeeping_freeze[0] end"
+    ]
+  ],
+  "central_trace_events_excluding_ten_seconds_at_each_end": 0,
+  "thermal_endpoints_celsius": {
+    "before": [
+      35,
+      38
+    ],
+    "after": [
+      34,
+      36
+    ]
+  },
+  "cpu0_deepest_state_s2idle_usage_before_after": [
+    1556,
+    1557
+  ],
+  "resume_warning": "The known PCIe/free-already-free-IRQ warning recurred.",
+  "limitations": [
+    "Whole-capture 2.696 W includes 71.55 seconds outside suspend; it is not isolated sleep power.",
+    "Kernel probes can perturb CPU-idle behavior. AC and probe instrumentation both changed before this healthy capture, so neither can be credited individually for recovery.",
+    "Gating can capture returns from calls begun before the recording interval and omit returns after its end; entry/return totals need not match.",
+    "A healthy instrumented run cannot establish what return codes occur during the bad state."
+  ],
+  "next_step": "Repeat with ordinary idle tracing in the same boot and unchanged AC/app setup to check whether the return probes mask the idle loop. Capture the supported return probes again when the bad state can be reproduced.",
+  "source_references": [
+    "build/linux-7.3/arch/arm64/kernel/suspend.c:138",
+    "build/linux-7.3/drivers/firmware/psci/psci.c:501"
+  ],
+  "private_evidence_sha256": {
+    "after.json": "2c127597b2aac8aade530c6557e6fbd0195edc36c686c32fd6312e20e11b9ca0",
+    "before.json": "36319b41b5e1e0ebc31f86ec25ca2df57f83c860a016243881d438103745417a",
+    "cpu-idle-after.json": "d0440536221813e15ae39613c12ab0c6e75045836163b565be7989523fb8d54a",
+    "cpu-idle-before.json": "e3d0c7aa9b76fa864bf1a7a32eca0d305f37566d175e5aa97698fd0d54f5c908",
+    "idle-trace.json": "4d81e80e4c86e99f93cfc719863d5a93c8127802c185dbd828b2143ff9d126b9",
+    "journal.log": "f1a3f50f8180e788f99447e7fad40cc9835b54d0cd7a732208ad57990d82fe08",
+    "return-probe-profile.txt": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+    "return-probes.json": "7d0df05e78b4147c812e1c4dfba7012576e78eeb63f1a56f38ee08578b2baaf8",
+    "summary.json": "8bd2f8963cbf79b6752282d761431e75e2e6fed6763b38cc1e44101fa526c95d",
+    "trace-stats.txt": "bbc250901ce436ba8957e611346ec8feb525696c4dd0f68eca0e003379a5e2aa",
+    "trace.txt": "ad7b3d5df4151a4fe44613058aa66f874e4b122396a0f8a1db389bb59b7b6fea",
+    "wake-trace.json": "21a80433427f44ef220bb887ccd37a3ed9245951f85efb5068ce811ff4b1a5ac"
+  }
+}

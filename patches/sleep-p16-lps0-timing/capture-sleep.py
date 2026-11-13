@@ -328,9 +328,9 @@ def main():
                 instance.rmdir()
             if return_probes:
                 profile = read(TRACE / 'kprobe_profile')
-                group = return_probes[0].split('/')[0]
-                (output / 'return-probe-profile.txt').write_text(
-                    '\n'.join(line for line in profile.splitlines() if group in line)+'\n')
+                # This kernel prints event names without their group; filtering
+                # by group discards every row. Preserve the complete local file.
+                (output / 'return-probe-profile.txt').write_text(profile+'\n')
                 remove_return_probes(return_probes)
         after = snapshot()
         if args.idle_returns:
