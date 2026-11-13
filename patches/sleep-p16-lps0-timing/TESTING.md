@@ -350,6 +350,32 @@ The closed-lid interval still requires a human and an external timer; this
 option neither wakes nor suspends the laptop. Launch in a visible terminal so
 sudo authentication stays in the user's terminal.
 
+For the November 12 recurrence's mid-suspend transition, add `--idle-returns`:
+
+```bash
+sudo python capture-sleep.py --mode on --battery --idle-returns --auto-finish --label battery-idle-returns-10m-01 --seconds 600 --resume-wait 60
+```
+
+This implies `--idle-details` and defines uniquely named temporary entry/return
+probes on `psci_cpu_suspend_enter`, recording the requested state and signed
+return value. The kernel rejects probes on its protected ACPI idle wrappers;
+those wrappers and the probe blacklist are left untouched. Kernel configuration
+and existing function support are checked by actually registering probes; setup
+must succeed before `ARMED`. The November 13 live preflight verified creation,
+gating, formats and cleanup while preserving the existing probe registry,
+without initiating suspend.
+
+Probe records use the same suspend/early-resume gating as the IRQ trace.
+Definitions are saved in `return-probes.json`, per-CPU state descriptions and
+s2idle entry counts in `cpu-idle-before.json`/`cpu-idle-after.json`, and kernel
+probe hit/miss counters in `return-probe-profile.txt`. Return probes allow 128
+concurrent instances. Definitions are appended without truncating the shared
+probe registry and only this capture's names are removed during cleanup.
+Probe handlers can perturb timing, even outside the gated recording interval;
+this is a supervised diagnostic on the existing kernel, not a sleep-power
+benchmark. Return zero alone does not prove hardware deep-state residency.
+Check probe misses and trace overruns before inferring that an event is absent.
+
 Start with **30 minutes**. If suspend/resume works and the drain is reasonable,
 repeat for **two hours** to reduce the relative effect of gauge rounding and
 the short awake periods at the start/end. The first 30-minute test is now

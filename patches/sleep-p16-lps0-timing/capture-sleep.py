@@ -69,14 +69,61 @@ def interrupted(*_):
     raise KeyboardInterrupt
 
 
-def configure_idle_trace(instance, registered):
+def write_probe_command(command):
+    # Python's append-mode file object seeks to EOF; tracefs rejects that seek.
+    # A raw append descriptor also guarantees the shared registry is not truncated.
+    fd = os.open(TRACE / 'kprobe_events', os.O_WRONLY | os.O_APPEND)
+    try:
+        data = (command + '\n').encode()
+        if os.write(fd, data) != len(data):
+            raise RuntimeError('Incomplete tracefs probe command')
+    finally:
+        os.close(fd)
+
+
+def configure_return_probes(instance, registered):
+    """Define uniquely named probes; never truncate the shared probe registry."""
+    group = 'p16_ret_' + str(os.getpid()) + '_' + str(time.time_ns())
+    definitions = (
+        ('psci_enter', 'p', 'psci_cpu_suspend_enter state=$arg1:x32'),
+        ('psci_return', 'r128', 'psci_cpu_suspend_enter state=$arg1:x32 ret=$retval:s32'),
+    )
+    events = []
+    for name, kind, definition in definitions:
+        event = f'{group}/{name}'
+        write_probe_command(f'{kind}:{event} {definition}')
+        registered.append(event)
+        events.append(event)
+    return {'events': events, 'group': group, 'maxactive': 128,
+            'acpi_wrapper': 'Not probed: protected idle text; use PSCI returns and idle-state counters',
+            'definitions': [f'{kind}:{group}/{name} {definition}'
+                            for name, kind, definition in definitions]}
+
+
+def remove_return_probes(registered):
+    for event in reversed(registered):
+        write_probe_command(f'-:{event}')
+
+
+def idle_state_snapshot():
+    return {
+        cpu.name: {
+            state.name: {'name': read(state / 'name'), 'desc': read(state / 'desc'),
+                         's2idle_usage': read(state / 's2idle/usage')}
+            for state in sorted((cpu / 'cpuidle').glob('state*'))
+        }
+        for cpu in sorted(Path('/sys/devices/system/cpu').glob('cpu[0-9]*'))
+    }
+
+
+def configure_idle_trace(instance, registered, extra_events=()):
     """Gate noisy events to machine_suspend; keep the ordinary PM trace on."""
     events = (
         'irq/irq_handler_entry', 'irq/softirq_entry',
         'timer/timer_expire_entry', 'timer/hrtimer_expire_entry',
         'timer/timer_start', 'timer/hrtimer_start',
         'ipi/ipi_entry', 'ipi/ipi_raise',
-    )
+    ) + tuple(extra_events)
     result = {'scope': 'machine_suspend begin through first subsequent device PM callback',
               'enabled_events': [], 'unavailable_events': []}
     resume_trigger = instance / 'events/power/device_pm_callback_start/trigger'
@@ -153,7 +200,10 @@ def main():
                         help='Trace all handled IRQs, timer callbacks and IPIs during machine_suspend; implies --wake-details')
     parser.add_argument('--auto-finish', action='store_true',
                         help='Finish after a recorded lid close/open cycle and --resume-wait; no done input required')
+    parser.add_argument('--idle-returns', action='store_true',
+                        help='Add temporary PSCI entry/return probes; implies --idle-details')
     args = parser.parse_args()
+    args.idle_details = args.idle_details or args.idle_returns
     args.wake_details = args.wake_details or args.idle_details
     if not re.fullmatch(r'[a-zA-Z0-9_-]+', args.label) or args.seconds < 1 or args.resume_wait < 0:
         parser.error('Use a simple label, a positive duration, and a nonnegative resume wait')
@@ -190,6 +240,8 @@ def main():
     status = 'setup'
     trace_text = ''
     idle_triggers = []
+    return_probes = []
+    return_trace = {'requested': args.idle_returns}
     idle_trace = {'requested': args.idle_details}
     wake_trace = {'requested': args.wake_details, 'enabled_events': [],
                   'unavailable_events': [], 'acpi_event_irqs': []}
@@ -203,6 +255,10 @@ def main():
             raise RuntimeError('Boot-time trace clock is unavailable; durations would be misleading')
         (instance / 'trace_clock').write_text('boot')
         (instance / 'events/power/suspend_resume/enable').write_text('1')
+        if args.idle_returns:
+            return_trace.update(configure_return_probes(instance, return_probes))
+            (output / 'return-probes.json').write_text(json.dumps(return_trace, indent=2)+'\n')
+            (output / 'cpu-idle-before.json').write_text(json.dumps(idle_state_snapshot(), indent=2)+'\n')
         if args.wake_details:
             events = ['power/wakeup_source_activate', 'power/wakeup_source_deactivate']
             # Discover this boot's IRQ assignment; never assume IRQ 72 is stable.
@@ -226,7 +282,7 @@ def main():
                     wake_trace['unavailable_events'].append(event)
             (output / 'wake-trace.json').write_text(json.dumps(wake_trace, indent=2)+'\n')
         if args.idle_details:
-            idle_trace.update(configure_idle_trace(instance, idle_triggers))
+            idle_trace.update(configure_idle_trace(instance, idle_triggers, return_probes))
             (output / 'idle-trace.json').write_text(json.dumps(idle_trace, indent=2)+'\n')
         (output / 'before.json').write_text(json.dumps(before, indent=2)+'\n')
         cursor = None
@@ -241,6 +297,8 @@ def main():
             print('Wake tracing: '+json.dumps(wake_trace), flush=True)
         if args.idle_details:
             print('Idle tracing: '+json.dumps(idle_trace), flush=True)
+        if args.idle_returns:
+            print('Firmware return tracing: '+json.dumps(return_trace), flush=True)
         if args.auto_finish:
             print(f'Close the lid for {args.seconds} seconds using an external timer. After reopening, capture finishes automatically after {args.resume_wait} seconds; no typing required.', flush=True)
         else:
@@ -268,7 +326,15 @@ def main():
                 remove_idle_triggers(instance, idle_triggers)
                 (instance / 'events/enable').write_text('0')
                 instance.rmdir()
+            if return_probes:
+                profile = read(TRACE / 'kprobe_profile')
+                group = return_probes[0].split('/')[0]
+                (output / 'return-probe-profile.txt').write_text(
+                    '\n'.join(line for line in profile.splitlines() if group in line)+'\n')
+                remove_return_probes(return_probes)
         after = snapshot()
+        if args.idle_returns:
+            (output / 'cpu-idle-after.json').write_text(json.dumps(idle_state_snapshot(), indent=2)+'\n')
         (output / 'after.json').write_text(json.dumps(after, indent=2)+'\n')
         summary = {'status': status, 'mode': args.mode, 'planned_lid_seconds': args.seconds,
                    'capture_elapsed_seconds': round(after['boottime_seconds'] - before['boottime_seconds'], 6),
@@ -279,6 +345,7 @@ def main():
         summary['auto_finish_on_lid_cycle'] = args.auto_finish
         summary['wake_trace'] = wake_trace
         summary['idle_trace'] = idle_trace
+        summary['return_trace'] = return_trace
         summary['battery'] = battery_summary(before, after, summary['machine_suspend_seconds'])
         for name in ('success', 'fail'):
             try:
