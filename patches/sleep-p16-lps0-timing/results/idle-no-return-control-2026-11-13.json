@@ -1,0 +1,92 @@
+{
+  "date": "2026-11-13",
+  "capture": "battery-idle-control-no-returns-10m-01-20261113-003420-735791",
+  "original_summary": {
+    "status": "finished",
+    "mode": "on",
+    "planned_lid_seconds": 600,
+    "capture_elapsed_seconds": 825.041907,
+    "machine_suspend_seconds": [
+      752.73031
+    ],
+    "boot_id": "3aa62104-561d-4e1c-baa5-46b14844082b",
+    "last_wake_irq": "72",
+    "battery_test_requested": true,
+    "planned_resume_wait_seconds": 60,
+    "auto_finish_on_lid_cycle": true,
+    "wake_trace": {
+      "requested": true,
+      "enabled_events": [
+        "power/wakeup_source_activate",
+        "power/wakeup_source_deactivate"
+      ],
+      "unavailable_events": [],
+      "acpi_event_irqs": [
+        72,
+        141
+      ]
+    },
+    "idle_trace": {
+      "requested": true,
+      "scope": "machine_suspend begin through first subsequent device PM callback",
+      "enabled_events": [
+        "irq/irq_handler_entry",
+        "irq/softirq_entry",
+        "timer/timer_expire_entry",
+        "timer/hrtimer_expire_entry",
+        "timer/timer_start",
+        "timer/hrtimer_start",
+        "ipi/ipi_entry",
+        "ipi/ipi_raise"
+      ],
+      "unavailable_events": []
+    },
+    "return_trace": {
+      "requested": false
+    },
+    "battery": {
+      "measurement_scope": "Entire capture, including awake and suspend/resume overhead",
+      "power_check_scope": "Endpoints only; keep all external power disconnected throughout",
+      "endpoints_on_battery": true,
+      "battery": "BAT0",
+      "measurement_seconds": 825.041893,
+      "energy_before_wh": 69.495,
+      "energy_after_wh": 67.489,
+      "energy_full_before_wh": 99.902,
+      "energy_full_after_wh": 99.902,
+      "energy_used_wh": 2.006,
+      "reported_capacity_before_percent": "70",
+      "reported_capacity_after_percent": "68",
+      "machine_suspend_total_seconds": 752.73031,
+      "outside_machine_suspend_seconds": 72.311583,
+      "machine_suspend_fraction_percent": 91.235,
+      "average_capture_power_w": 8.753,
+      "energy_loss_percent_of_full": 2.008,
+      "energy_loss_percent_of_full_per_hour": 8.7616,
+      "notes": []
+    },
+    "success_delta": 1,
+    "fail_delta": 0
+  },
+  "assessment": "The no-return-probe control again reproduced the internal idle loop and high whole-capture power, after the same-boot return-probe run was healthy.",
+  "freeze_exit_count": 977,
+  "first_freeze_exit_seconds_after_machine_suspend_begin": 263.94861200000014,
+  "median_exit_interval_seconds": 0.5079279999999926,
+  "trace_losses": 0,
+  "interpretation": "The changed behavior is consistent with probe instrumentation perturbing or masking the failure, but one ordered pair of tests does not prove causality. AC/app/runtime changes remain confounders.",
+  "limitations": [
+    "Whole-capture power includes 72.31 seconds outside machine_suspend.",
+    "The control has no PSCI return probes, so firmware return codes during this reproduced loop remain unavailable."
+  ],
+  "next_step": "Repeat the no-return-probe control in the same boot to check reproducibility before selecting further instrumentation.",
+  "private_evidence_sha256": {
+    "after.json": "59b18d8cd0f66d19c6590034dad9c780d5b2dd3558a282a33726186dbad0a886",
+    "before.json": "91cef726e69529d4b4f97b6de16cbaf29e2dc23ce85be96f47f79726e83e7447",
+    "idle-trace.json": "f6a0a136776ecc3225580f48f31267435b042f47599a25cc1355ca6b6cc8fc2d",
+    "journal.log": "70441e02061862d6ea211452dfe7043087e3904a65795a495954913bcf1629e7",
+    "summary.json": "df4392f0eb888ec2f5e84b7455151d80e95700d6390f2f1a98923dd3eb8e2b84",
+    "trace-stats.txt": "ec63243a568ef0bddc81ade223b2e8e99729c7d1e1988911a209f13b5ba0a9e6",
+    "trace.txt": "f910c7995a084606787251469dbfdbdbd9e7dc06248e597883215977b8a99811",
+    "wake-trace.json": "21a80433427f44ef220bb887ccd37a3ed9245951f85efb5068ce811ff4b1a5ac"
+  }
+}
